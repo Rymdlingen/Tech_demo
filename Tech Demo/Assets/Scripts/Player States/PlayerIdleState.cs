@@ -4,18 +4,26 @@ using UnityEngine;
 
 public class PlayerIdleState : PlayerBaseState
 {
+    public PlayerIdleState(PlayerController player) : base(player)
+    {
+
+    }
+
     public override void EnterState()
     {
-        throw new System.NotImplementedException();
+        // what to put here?
     }
 
     public override void Update()
     {
-        throw new System.NotImplementedException();
+        // Transition to the move state if there is movemnet input (WASD or arrow keys).
+        if (Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0)
+        {
+            player.TransitionToState(player.moveState);
+        }
     }
 
-    // Start is called before the first frame update
-    void Start()
+    public override void FixedUpdate()
     {
 
     }

@@ -15,4 +15,5 @@ public abstract class PlayerBaseState
 
     public abstract void Update();
 
+    public abstract void FixedUpdate();
 }

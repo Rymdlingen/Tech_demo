@@ -4,22 +4,50 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
+    // Fields
+    private PlayerBaseState _currentState;
+    [SerializeField] private float _walkSpeed;
+    [SerializeField] private float _runSpeed;
 
     // Properties
-    float walkSpeed { get; set; }
-    float runSpeed { get; set; }
+    public float walkSpeed { get => _walkSpeed; }
+    public float runSpeed { get => _runSpeed; }
 
-    PlayerBaseState currentState { get; set; }
+    public PlayerBaseState currentState
+    {
+        get { return _currentState; }
+    }
 
-    // Start is called before the first frame update
+    public PlayerIdleState idleState { get; private set; }
+    public PlayerMoveState moveState { get; private set; }
+
+    // Start is called before the first frame update.
     void Start()
     {
+        idleState = new PlayerIdleState(this);
+        moveState = new PlayerMoveState(this);
 
+        TransitionToState(idleState);
     }
 
-    // Update is called once per frame
+    // Update is called once per frame.
     void Update()
     {
-
+        _currentState.Update();
     }
+
+    private void FixedUpdate()
+    {
+        _currentState.FixedUpdate();
+    }
+
+    public void TransitionToState(PlayerBaseState state)
+    {
+        _currentState = state;
+        _currentState.EnterState();
+    }
+
+    // Raycast for checking if player can go there
+    // WASD input
+    // Shift for running
 }
