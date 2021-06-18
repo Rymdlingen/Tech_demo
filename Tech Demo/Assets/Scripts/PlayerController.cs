@@ -13,10 +13,7 @@ public class PlayerController : MonoBehaviour
     public float walkSpeed { get => _walkSpeed; }
     public float runSpeed { get => _runSpeed; }
 
-    public PlayerBaseState currentState
-    {
-        get { return _currentState; }
-    }
+    public PlayerBaseState currentState { get => _currentState; }
 
     public PlayerIdleState idleState { get; private set; }
     public PlayerMoveState moveState { get; private set; }
