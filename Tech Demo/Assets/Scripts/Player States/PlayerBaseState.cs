@@ -4,9 +4,9 @@ using UnityEngine;
 
 public abstract class PlayerBaseState
 {
-    protected PlayerController player;
+    protected PlayerControllerOld player;
 
-    public PlayerBaseState(PlayerController player)
+    public PlayerBaseState(PlayerControllerOld player)
     {
         this.player = player;
     }

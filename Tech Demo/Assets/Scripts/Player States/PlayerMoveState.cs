@@ -22,7 +22,7 @@ public class PlayerMoveState : PlayerBaseState
     private float lookForCliffOffSet = 1f;
 
     // Constructor.
-    public PlayerMoveState(PlayerController player) : base(player)
+    public PlayerMoveState(PlayerControllerOld player) : base(player)
     {
         playerRigidbody = player.GetComponent<Rigidbody>();
     }

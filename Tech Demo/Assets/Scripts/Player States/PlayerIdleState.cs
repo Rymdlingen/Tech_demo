@@ -6,7 +6,7 @@ public class PlayerIdleState : PlayerBaseState
 {
     private Rigidbody playerRigidbody;
 
-    public PlayerIdleState(PlayerController player) : base(player)
+    public PlayerIdleState(PlayerControllerOld player) : base(player)
     {
         playerRigidbody = player.GetComponent<Rigidbody>();
     }
