@@ -243,7 +243,7 @@ GameObject:
   - component: {fileID: 1138559178}
   m_Layer: 0
   m_Name: Forest area
-  m_TagString: Untagged
+  m_TagString: Terrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -714,6 +714,7 @@ GameObject:
   - component: {fileID: 1734308008}
   - component: {fileID: 1734308007}
   - component: {fileID: 1734308012}
+  - component: {fileID: 1734308013}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -829,8 +830,24 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   walkSpeed: 2
   runSpeed: 4
-  airSpeed: 0
+  airSpeed: 1
+  jumpForce: 200
   safeFallDistance: 1
+  slopeRestriction: 2
+--- !u!114 &1734308013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1734308006}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a4ccbfc7e6d4490ba821d545f7cb31e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _walkSpeed: 2
+  _runSpeed: 4
 --- !u!1 &1805158687
 GameObject:
   m_ObjectHideFlags: 0
@@ -844,7 +861,7 @@ GameObject:
   - component: {fileID: 1805158689}
   m_Layer: 0
   m_Name: Shore area
-  m_TagString: Untagged
+  m_TagString: Terrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -921,7 +938,7 @@ GameObject:
   - component: {fileID: 1912435197}
   m_Layer: 0
   m_Name: Cube
-  m_TagString: Untagged
+  m_TagString: Terrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

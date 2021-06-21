@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float walkSpeed;
     [SerializeField] private float runSpeed;
     [SerializeField] private float airSpeed;
+    [SerializeField] private float jumpForce;
 
     private Rigidbody playerRigidbody;
     private bool isGrounded;
@@ -19,7 +20,7 @@ public class PlayerController : MonoBehaviour
 
     [SerializeField] private float safeFallDistance;
     private float stepHight = .2f;
-    private float slopeRestriction = 1; // 1:slopeRestriction (slopeRestriction 1 = 45° is walkable)
+    [SerializeField] private float slopeRestriction = 1; // 1:slopeRestriction (slopeRestriction 1 = 45° is walkable)
 
     // Properties.
 
@@ -86,14 +87,14 @@ public class PlayerController : MonoBehaviour
 
         // Calculate if players is on the ground
         // Set isGrounded to true or false.
-        float yPlayer = playerRigidbody.position.y - playerRigidbody.transform.localScale.y;
+        float yPlayer = playerRigidbody.position.y - playerRigidbody.transform.lossyScale.y;
         float yGround = GetGroundHight(playerRigidbody.position);
 
         // TODO Differs 0.000004 and doesn't work.
         print("player " + yPlayer);
         print("ground " + yGround);
 
-        if (yPlayer > yGround)
+        if (yPlayer > yGround + .01f)
         {
             isGrounded = false;
         }
@@ -103,7 +104,6 @@ public class PlayerController : MonoBehaviour
         }
 
         print(isGrounded);
-
 
         // Check if grounded.
         // If player is grounded check if they are pressing any action buttons (interact, jump or crouch).
@@ -118,7 +118,7 @@ public class PlayerController : MonoBehaviour
             // Nothing.(just continue)
         }
 
-        // Check if player is holding shift (speed modifier).
+        // Check if player is holding shift (speed modifier). TODO should it also check for id the player is grounded?
         // If the player is holding shift they are running, change the speed accordingly.
         if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
@@ -171,13 +171,13 @@ public class PlayerController : MonoBehaviour
             // TODO move slope check here?? or is slope check just for moving upwards?
             if (yGroundNextFrame < yGroundThisFrame - safeFallDistance)
             {
-                // But of the player is in the air they should still fall down.
+                // But if the player is in the air they should still fall down.
                 playerRigidbody.velocity = Vector3.zero;
             }
             else
             {
                 // If the player is on the ground move normally.
-                if (isGrounded)
+                if (true || isGrounded)
                 {
                     // yes
                     //    move limited to speed
@@ -217,8 +217,8 @@ public class PlayerController : MonoBehaviour
     private void MovePlayer(Vector3 direction)
     {
         // Used to make sure there is only force added if the speed is not reached.
-        float actualSpeed = playerRigidbody.velocity.magnitude;
-        float speedDifference = Mathf.Max(0, activSpeedSetting - actualSpeed);
+        float currentSpeed = playerRigidbody.velocity.magnitude;
+        float speedDifference = Mathf.Max(0, activSpeedSetting - currentSpeed);
         // Debug.Log(actualSpeed);
 
         // Get the slope in the direction the player is moving.
@@ -238,7 +238,7 @@ public class PlayerController : MonoBehaviour
         forceDirection.Normalize();
 
         // Reduce the speed if the player is going to fast (so the player doesn't go faster downhills).
-        if (actualSpeed > activSpeedSetting)
+        if (currentSpeed > activSpeedSetting)
         {
             playerRigidbody.velocity = forceDirection * activSpeedSetting;
             return;
@@ -299,5 +299,21 @@ public class PlayerController : MonoBehaviour
     private float GetGroundHight(Vector3 position)
     {
         return GetGroundHight(position.x, position.z);
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.tag == "Terrain")
+        {
+            // isGrounded = true;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.tag == "Terrain")
+        {
+            // isGrounded = false;
+        }
     }
 }
