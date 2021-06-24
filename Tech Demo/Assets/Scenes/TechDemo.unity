@@ -136,7 +136,7 @@ GameObject:
   - component: {fileID: 602519957}
   m_Layer: 0
   m_Name: Terrain_(-1000.0, 0.0, 0.0)
-  m_TagString: Untagged
+  m_TagString: Terrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -319,7 +319,7 @@ GameObject:
   - component: {fileID: 1199728431}
   m_Layer: 0
   m_Name: Terrain_(-1000.0, 0.0, -1000.0)
-  m_TagString: Untagged
+  m_TagString: Terrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -395,7 +395,7 @@ GameObject:
   - component: {fileID: 1434848000}
   m_Layer: 0
   m_Name: Terrain_(0.0, 0.0, -1000.0)
-  m_TagString: Untagged
+  m_TagString: Terrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 4294967295
@@ -714,7 +714,6 @@ GameObject:
   - component: {fileID: 1734308008}
   - component: {fileID: 1734308007}
   - component: {fileID: 1734308012}
-  - component: {fileID: 1734308013}
   m_Layer: 2
   m_Name: Player
   m_TagString: Player
@@ -809,7 +808,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1734308006}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.07, y: 3.78, z: 6.66}
+  m_LocalPosition: {x: 6.96, y: 3.78, z: 2.92}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 793535495}
@@ -830,24 +829,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   walkSpeed: 2
   runSpeed: 4
-  airSpeed: 1
-  jumpForce: 200
-  safeFallDistance: 1
+  airSpeed: 5
+  jumpForce: 0
+  safeFallDistance: 4
+  stepHight: 0.5
   slopeRestriction: 2
---- !u!114 &1734308013
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1734308006}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a4ccbfc7e6d4490ba821d545f7cb31e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _walkSpeed: 2
-  _runSpeed: 4
 --- !u!1 &1805158687
 GameObject:
   m_ObjectHideFlags: 0
