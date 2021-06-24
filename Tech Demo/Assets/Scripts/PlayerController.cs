@@ -33,6 +33,7 @@ public class PlayerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        isGrounded = true;
 
         verticalInput = Input.GetAxis("Vertical");
         horizontalInput = Input.GetAxis("Horizontal");
@@ -115,8 +116,8 @@ public class PlayerController : MonoBehaviour
             Vector3 movementDirection = input.normalized;
             Vector3 groundOffset = movementDirection * (activeSpeedSetting * Time.fixedDeltaTime);
 
-            float yGroundThisFrame = GetGroundHight(playerRigidbody.position);
-            float yGroundNextFrame = GetGroundHight(playerRigidbody.position + groundOffset);
+            float yGroundThisFrame = GetGroundHeight(playerRigidbody.position);
+            float yGroundNextFrame = GetGroundHeight(playerRigidbody.position + groundOffset);
 
             // Only move player if there is not a cliff. By checking this before checking if the player is grounded I make sure they player don't fall down a cliff while jumping.
             // TODO move slope check here?? or is slope check just for moving upwards?
@@ -178,23 +179,51 @@ public class PlayerController : MonoBehaviour
     // Moves the player id player is on ground.
     private void MovePlayerOnGround(Vector3 inputs)
     {
+        var collider = GetComponent<CapsuleCollider>();
 
         Vector3 direction = inputs.normalized;
 
         playerRigidbody.velocity = Vector3.zero;
 
         // Get the slope in the direction the player is moving.
-        float radius = playerRigidbody.GetComponent<CapsuleCollider>().radius;
+        float radius = collider.radius;
 
         float farDistance = radius * Mathf.Sin(slopeRestriction * Mathf.Deg2Rad);
-        float frontSlope = GetSlopeInDirection(playerRigidbody.position, direction, farDistance);
-        float slope = GetSlopeInDirection(playerRigidbody.position, direction, 0);
+        float frontSlope = GetSlopeInDirection(transform.position, direction, farDistance);
+        float slope = GetSlopeInDirection(transform.position, direction, 0);
         float backSlope = GetSlopeInDirection(transform.position, direction, -farDistance);
 
 
-        Vector3 groundOffset = direction * (activeSpeedSetting * Time.fixedDeltaTime);
-        float farGroundHight = GetGroundHight(playerRigidbody.position + groundOffset + direction * radius);
-        float closeGroundHight = GetGroundHight(playerRigidbody.position + groundOffset);
+        // Add extra vertical force depending on the slope of the ground.
+        Vector3 moveDirection = direction;
+        moveDirection.y = (frontSlope + slope + backSlope) / 3;
+        moveDirection.Normalize();
+
+        // Next frame position.
+        Vector3 groundOffset = moveDirection * (activeSpeedSetting * Time.fixedDeltaTime);
+
+        Vector3 newPosition = transform.position + groundOffset;
+
+        float newGroundHeight = GetGroundHeight(newPosition);
+        newPosition.y = newGroundHeight + collider.height / 2;
+
+        float allowedSlope = Mathf.Tan(slopeRestriction * Mathf.Deg2Rad);
+
+        float wideNextPositionSlope = GetGradient(newPosition, radius).magnitude;
+        float narrowNextPositionSlope = GetGradient(newPosition, 0.1f).magnitude;
+
+        // Check if we are stepping into too steep teriritory.
+        if (wideNextPositionSlope > allowedSlope && narrowNextPositionSlope > allowedSlope)
+        {
+            // Allow to step uo/down cliffs or stairs.
+            if (frontSlope > allowedSlope)
+            {
+                return;
+            }
+        }
+
+        transform.position = newPosition;
+
 
 
         // Ray on the ground, with the current slope in the direction the player is moving.
@@ -203,87 +232,13 @@ public class PlayerController : MonoBehaviour
         // Far slope is red.
         Debug.DrawRay(transform.position + direction * farDistance + Vector3.down * .9f, new Vector3(direction.x, frontSlope, direction.z).normalized * safeFallDistance, Color.red);
 
-        // Add extra vertical force depending on the slope of the ground.
-        Vector3 forceDirection = direction;
-        forceDirection.y = Mathf.Max((frontSlope + slope) / 2, slope);
 
-        if (frontSlope >= slope)
-        {
-            if (farGroundHight > closeGroundHight + 0.01f)
-            {
-                forceDirection.y = (frontSlope + slope) / 2;
-            }
-            else
-            {
-                forceDirection.y = backSlope;
-            }
-        }
-        else
-        {
-            if (farGroundHight < closeGroundHight)
-            {
-                forceDirection.y = backSlope;
-            }
-            else
-            {
-                forceDirection.y = slope;
-            }
-        }
-
-        forceDirection.Normalize();
-
-
-        /* // Ray on the ground, with the current slope in the direction the player is moving.
-         // Close slope is blue.
-         Debug.DrawRay(playerRigidbody.position + Vector3.down * .9f, new Vector3(flatForceDirection.x, closeSlope, flatForceDirection.z) * safeFallDistance, Color.blue, .5f);
-         // Far slope is red.
-         Debug.DrawRay(playerRigidbody.position + Vector3.down * .9f, new Vector3(flatForceDirection.x, farSlope, flatForceDirection.z) * safeFallDistance, Color.red, .5f);
-        */
-
-
-
-        // If the ground is to steep, the player can't move in that direction.
-        /*
-                float fallDistance = GetGroundHight(transform.position) - closeGroundHight;
-                if (fallDistance < safeFallDistance)
-                {
-                    // Will continue.
-                    if (forceDirection.y < 0)
-                    {
-                        if (GetGroundHight(transform.position) > closeGroundHight)
-                        {
-
-                        }
-                        else
-                        {
-                            forceDirection.y = 0;
-                            forceDirection.Normalize();
-                        }
-                    }
-                }
-                else if (farSlope > slopeRestriction || closeSlope > slopeRestriction)
-                {
-                    Debug.Log("slope stop");
-                    return;
-                }
-
-                // Add extra force if the player is going upwards, so they don't lose speed upwards.
-                float counteractGravityFactor = Mathf.Max(0, farSlope);
-                playerRigidbody.AddForce(Vector3.up * counteractGravityFactor * 9.81f, ForceMode.Acceleration);
-                // Debug.Log(counteractGravityFactor);
-        */
-        Debug.Log("Force direction: " + forceDirection);
-        // Moves the player in the given direction.
-        playerRigidbody.AddForce(forceDirection * activeSpeedSetting, ForceMode.VelocityChange);
-
-        Debug.DrawRay(transform.position + Vector3.down * .9f, forceDirection, Color.green, .5f);
     }
 
 
     // Check the gradient around the player.
-    private Vector3 GetGradient(float x, float z)
+    private Vector3 GetGradient(float x, float z, float d)
     {
-        float d = 0.1f;
         float yL = GetGroundHight(x - d, z);
         float yR = GetGroundHight(x + d, z);
         float yF = GetGroundHight(x, z + d);
@@ -294,14 +249,19 @@ public class PlayerController : MonoBehaviour
         return new Vector3((yR - yL) / dd, (yF - yB) / dd);
     }
 
+    private Vector3 GetGradient(Vector3 position, float d)
+    {
+        return GetGradient(position.x, position.z, d);
+    }
+
     // Checks the slope of the ground in the direction the player is moving.
     private float GetSlopeInDirection(Vector3 position, Vector3 direction, float offset)
     {
         direction.y = 0;
         float d = 0.1f;
 
-        float yOrigin = GetGroundHight(position + direction.normalized * offset);
-        float y = GetGroundHight(position + direction.normalized * (d + offset));
+        float yOrigin = GetGroundHeight(position + direction.normalized * offset);
+        float y = GetGroundHeight(position + direction.normalized * (d + offset));
 
 
         return (y - yOrigin) / d;
@@ -321,7 +281,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // Checks the hight (y) of the ground in a specific point (x,z), ignoring the y value that is sent in.
-    private float GetGroundHight(Vector3 position)
+    private float GetGroundHeight(Vector3 position)
     {
         return GetGroundHight(position.x, position.z);
     }
