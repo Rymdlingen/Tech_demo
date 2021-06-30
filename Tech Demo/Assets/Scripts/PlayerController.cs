@@ -183,8 +183,6 @@ public class PlayerController : MonoBehaviour
 
         Vector3 direction = inputs.normalized;
 
-        playerRigidbody.velocity = Vector3.zero;
-
         // Get the slope in the direction the player is moving.
         float radius = collider.radius;
 
@@ -196,8 +194,8 @@ public class PlayerController : MonoBehaviour
 
         // Add extra vertical force depending on the slope of the ground.
         Vector3 moveDirection = direction;
-        moveDirection.y = (frontSlope + slope + backSlope) / 3;
-        moveDirection.Normalize();
+        // moveDirection.y = (frontSlope + slope + backSlope) / 3;
+        // moveDirection.Normalize();
 
         // Next frame position.
         Vector3 groundOffset = moveDirection * (activeSpeedSetting * Time.fixedDeltaTime);
@@ -215,12 +213,41 @@ public class PlayerController : MonoBehaviour
         // Check if we are stepping into too steep teriritory.
         if (wideNextPositionSlope > allowedSlope && narrowNextPositionSlope > allowedSlope)
         {
-            // Allow to step uo/down cliffs or stairs.
+            // Allow to step up/down cliffs or stairs.
             if (frontSlope > allowedSlope)
             {
                 return;
             }
         }
+
+        Vector3 directions = new Vector3(0, 0, 0);
+        if (inputs.x < 0)
+        {
+            directions.x = -1;
+        }
+        else if (inputs.x > 0)
+        {
+            directions.x = 1;
+        }
+
+        if (inputs.z < 0)
+        {
+            directions.z = -1;
+        }
+        else if (inputs.z > 0)
+        {
+            directions.z = 1;
+        }
+
+        // TODO change hardcoded number to buffert variable.
+        float wideNextPositionHeight = GetGroundHeight(transform.position + (radius + 0.1f) * directions);
+
+        if (wideNextPositionHeight - (transform.position.y - collider.height / 2) > stepHight || newGroundHeight - (transform.position.y - collider.height / 2) > stepHight)
+        {
+            return;
+        }
+
+
 
         transform.position = newPosition;
 
@@ -235,14 +262,28 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    private void StartFallingToGround()
+    {
+        // Add a bit of force in the direction, away from any vertical terrain
+
+        // Add gravity
+        playerRigidbody.velocity = new Vector3(0, 9.81f, 0);
+    }
+
+    private void Jump()
+    {
+        playerRigidbody.AddForce(Vector3.up, ForceMode.Impulse);
+    }
+
+    #region Gradients
 
     // Check the gradient around the player.
     private Vector3 GetGradient(float x, float z, float d)
     {
-        float yL = GetGroundHight(x - d, z);
-        float yR = GetGroundHight(x + d, z);
-        float yF = GetGroundHight(x, z + d);
-        float yB = GetGroundHight(x, z - d);
+        float yL = GetGroundHeight(x - d, z);
+        float yR = GetGroundHeight(x + d, z);
+        float yF = GetGroundHeight(x, z + d);
+        float yB = GetGroundHeight(x, z - d);
 
         float dd = d * 2;
 
@@ -268,7 +309,7 @@ public class PlayerController : MonoBehaviour
     }
 
     // Checks the hight (y) of the ground in a specific point (x,z).
-    private float GetGroundHight(float x, float z)
+    private float GetGroundHeight(float x, float z)
     {
         Vector3 origin = new Vector3(x, 100, z);
         RaycastHit hit;
@@ -283,9 +324,14 @@ public class PlayerController : MonoBehaviour
     // Checks the hight (y) of the ground in a specific point (x,z), ignoring the y value that is sent in.
     private float GetGroundHeight(Vector3 position)
     {
-        return GetGroundHight(position.x, position.z);
+        return GetGroundHeight(position.x, position.z);
     }
 
+    #endregion
+
+    #region Collisions
+
+    // Check if player is grounded.
     private void OnCollisionStay(Collision collision)
     {
         if (!isGrounded && collision.gameObject.tag == "Terrain")
@@ -309,4 +355,6 @@ public class PlayerController : MonoBehaviour
             isGrounded = false;
         }
     }
+
+    #endregion
 }
