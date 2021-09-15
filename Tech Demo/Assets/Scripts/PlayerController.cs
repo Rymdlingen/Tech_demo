@@ -63,6 +63,8 @@ public class PlayerController : MonoBehaviour
             {
                 activeSpeedSetting = airSpeed;
             }
+
+            // TODO add gravity?
         }
         else if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
         {
@@ -112,7 +114,7 @@ public class PlayerController : MonoBehaviour
                 //          move towards ground, fall
             }
         }*/
-            // Ray looking at the point where the player is moving in ths frame.
+            // Ray looking at the point where the player is moving in this frame.
             Vector3 movementDirection = input.normalized;
             Vector3 groundOffset = movementDirection * (activeSpeedSetting * Time.fixedDeltaTime);
 
@@ -172,11 +174,13 @@ public class PlayerController : MonoBehaviour
     // Moves player when player is in the air.
     private void MovePlayerInAir(Vector3 direction)
     {
+        // TODO should this have the gravity for falling??
+
         // Moves the player in the given direction.
         playerRigidbody.AddForce(direction.normalized * activeSpeedSetting * Time.fixedDeltaTime, ForceMode.VelocityChange);
     }
 
-    // Moves the player id player is on ground.
+    // Moves the player if player is on ground.
     private void MovePlayerOnGround(Vector3 inputs)
     {
         var collider = GetComponent<CapsuleCollider>();
