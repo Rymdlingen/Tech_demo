@@ -16,7 +16,7 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Ray ground =
+        // Ray ground =
         if (!isGrounded)
         {
             transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z);
