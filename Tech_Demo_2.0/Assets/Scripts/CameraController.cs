@@ -5,8 +5,10 @@ using UnityEngine;
 public class CameraController : MonoBehaviour
 {
     private Camera mainCamera;
+    [SerializeField] private GameObject player;
 
-    private float xOffet;
+
+    private float xOffset;
     private float yOffset;
 
     [SerializeField] private float cameraSpeed;
@@ -18,6 +20,8 @@ public class CameraController : MonoBehaviour
     void Start()
     {
         mainCamera = Camera.main;
+        xOffset = transform.rotation.x;
+        yOffset = transform.rotation.y;
     }
 
     // Update is called once per frame
@@ -26,16 +30,21 @@ public class CameraController : MonoBehaviour
         mouseX = Input.GetAxis("Mouse X");
         mouseY = Input.GetAxis("Mouse Y");
 
+        Debug.Log($"{mouseX}, {mouseY}");
+
         if (mouseX != 0)
         {
-            transform.Rotate(0, mouseX, 0);
+            xOffset += mouseX;
+            player.transform.rotation = Quaternion.Euler(0, xOffset, 0);
+            //transform.Rotate(0, mouseX, 0);
         }
 
         if (mouseY != 0)
         {
-            transform.Rotate(mouseY, 0, 0);
+            yOffset = Mathf.Max(0.0f, yOffset + mouseY);
+            //transform.Rotate(mouseY, 0, 0);
         }
 
-        transform.rotation = new Quaternion(transform.rotation.x, transform.rotation.y, 0, transform.rotation.w);
+        transform.rotation = Quaternion.Euler(yOffset, xOffset, 0);
     }
 }

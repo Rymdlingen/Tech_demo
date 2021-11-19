@@ -41,8 +41,8 @@ public class PlayerController : MonoBehaviour
         horizontalInput = Input.GetAxis("Horizontal");
 
         Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, Mathf.Infinity);
-        Debug.DrawRay(transform.position, Vector3.down * 10, Color.red, 2);
-        Debug.DrawLine(transform.position, hit.point, Color.blue);
+        // Debug.DrawRay(transform.position, Vector3.down * 10, Color.red, 2);
+        // Debug.DrawLine(transform.position, hit.point, Color.blue);
 
         // Make sure the player is on the ground.
         if (!isGrounded)
@@ -53,15 +53,15 @@ public class PlayerController : MonoBehaviour
         if (horizontalInput != 0)
         {
             controller.Move(new Vector3(horizontalInput, 0, 0) * Time.deltaTime * currentSpeed);
-            transform.position = new Vector3(transform.position.x, hit.point.y + transform.lossyScale.y, transform.position.z);
         }
 
         if (verticalInput != 0)
         {
-            controller.Move(new Vector3(0, 0, verticalInput) * Time.deltaTime * currentSpeed);
-            transform.position = new Vector3(transform.position.x, hit.point.y + transform.lossyScale.y, transform.position.z);
+            Vector3 fram = verticalInput * transform.forward;
+            controller.Move(fram * Time.deltaTime * currentSpeed);
         }
 
+        transform.position = new Vector3(transform.position.x, hit.point.y + transform.lossyScale.y, transform.position.z);
         Debug.Log(isGrounded);
     }
 
