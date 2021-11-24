@@ -25,7 +25,8 @@ public class PlayerController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKey(KeyCode.LeftShift) && currentSpeed != quickSpeed)
+        // Set the correct speed of the player, based on if shift is pressed.
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) && currentSpeed != quickSpeed)
         {
             currentSpeed = quickSpeed;
         }
@@ -52,13 +53,14 @@ public class PlayerController : MonoBehaviour
 
         if (horizontalInput != 0)
         {
-            controller.Move(new Vector3(horizontalInput, 0, 0) * Time.deltaTime * currentSpeed);
+            Vector3 sideways = horizontalInput * transform.right;
+            controller.Move(sideways * Time.deltaTime * currentSpeed);
         }
 
         if (verticalInput != 0)
         {
-            Vector3 fram = verticalInput * transform.forward;
-            controller.Move(fram * Time.deltaTime * currentSpeed);
+            Vector3 forward = verticalInput * transform.forward;
+            controller.Move(forward * Time.deltaTime * currentSpeed);
         }
 
         transform.position = new Vector3(transform.position.x, hit.point.y + transform.lossyScale.y, transform.position.z);
