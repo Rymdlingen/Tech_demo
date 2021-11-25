@@ -4,51 +4,47 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    CharacterController controller;
-    private bool isGrounded;
+    private CharacterController controller;
 
     private float verticalInput;
     private float horizontalInput;
 
-    [SerializeField] float speed;
-    [SerializeField] float quickSpeed;
-
+    [SerializeField] private float walkSpeed;
+    [SerializeField] private float runSpeed;
     private float currentSpeed;
 
     // Start is called before the first frame update
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        currentSpeed = speed;
+        currentSpeed = walkSpeed;
     }
 
     // Update is called once per frame
     void Update()
     {
-        // Set the correct speed of the player, based on if shift is pressed.
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) && currentSpeed != quickSpeed)
+        // Set the correct speed of the player, if the player is holding shift use run speed, if not use walk speed.
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) && currentSpeed != runSpeed)
         {
-            currentSpeed = quickSpeed;
+            currentSpeed = runSpeed;
         }
         else
         {
-            if (currentSpeed != speed)
+            if (currentSpeed != walkSpeed)
             {
-                currentSpeed = speed;
+                currentSpeed = walkSpeed;
             }
         }
 
+        // Save movement input.
         verticalInput = Input.GetAxis("Vertical");
         horizontalInput = Input.GetAxis("Horizontal");
 
-        Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, Mathf.Infinity);
-        // Debug.DrawRay(transform.position, Vector3.down * 10, Color.red, 2);
-        // Debug.DrawLine(transform.position, hit.point, Color.blue);
-
-        // Make sure the player is on the ground.
-        if (!isGrounded)
+        // Move the character, based on the characters rotation (that is based on the cameras rotation).
+        if (verticalInput != 0)
         {
-            //transform.position = new Vector3(transform.position.x, hit.point.y + transform.lossyScale.y, transform.position.z);
+            Vector3 forward = verticalInput * transform.forward;
+            controller.Move(forward * Time.deltaTime * currentSpeed);
         }
 
         if (horizontalInput != 0)
@@ -57,32 +53,11 @@ public class PlayerController : MonoBehaviour
             controller.Move(sideways * Time.deltaTime * currentSpeed);
         }
 
-        if (verticalInput != 0)
-        {
-            Vector3 forward = verticalInput * transform.forward;
-            controller.Move(forward * Time.deltaTime * currentSpeed);
-        }
+        // Check if the character is on the ground.
+        Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, Mathf.Infinity);
+        // Debug.DrawLine(transform.position, hit.point, Color.blue);
 
+        // Keep the character on the ground.
         transform.position = new Vector3(transform.position.x, hit.point.y + transform.lossyScale.y, transform.position.z);
-        Debug.Log(isGrounded);
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.tag == "Terrain")
-        {
-            Debug.Log("enter");
-            isGrounded = true;
-        }
-
-    }
-
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.tag == "Terrain")
-        {
-            Debug.Log("exit");
-            isGrounded = false;
-        }
     }
 }

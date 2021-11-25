@@ -4,53 +4,51 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    private Camera mainCamera;
     [SerializeField] private GameObject player;
 
+    private float xRotation;
+    private float yRotation;
 
-    private float xOffset;
-    private float yOffset;
+    [SerializeField] private float cameraHorizontalSpeed;
+    [SerializeField] private float cameraVerticalSpeed;
+    [SerializeField] private float maxPitch;
+    [SerializeField] private float minPitch;
 
-    [SerializeField] private float cameraSpeed = 1;
-
-    private float mouseX;
-    private float mouseY;
-
-    private void Awake()
-    {
-        Cursor.lockState = CursorLockMode.Locked;
-    }
+    private float mouseXMovement;
+    private float mouseYMovement;
 
     // Start is called before the first frame update
     void Start()
     {
-        mainCamera = Camera.main;
-        xOffset = transform.rotation.x;
-        yOffset = transform.rotation.y;
+        // Save the start value of the camera pivots x and y rotation. 
+        xRotation = transform.rotation.x;
+        yRotation = transform.rotation.y;
     }
 
     // Update is called once per frame
     void Update()
     {
-        mouseX = Input.GetAxis("Mouse X");
-        mouseY = Input.GetAxis("Mouse Y");
+        // Store mouse movement.
+        mouseXMovement = Input.GetAxis("Mouse X");
+        mouseYMovement = Input.GetAxis("Mouse Y");
 
-        Debug.Log($"{mouseX}, {mouseY}");
-
-        if (mouseX != 0)
+        // Add the mouse x movement to the y rotation in the speed of horizontal camera movement.
+        if (mouseXMovement != 0)
         {
-            xOffset += mouseX * cameraSpeed;
-            player.transform.rotation = Quaternion.Euler(0, xOffset, 0);
-            //transform.Rotate(0, mouseX, 0);
+            yRotation += mouseXMovement * cameraHorizontalSpeed;
         }
 
-        if (mouseY != 0)
+        // Add the mouse y movement to the x rotation in the speed of vertical camera movement, but keep the value within the pitch restrictions.
+        if (mouseYMovement != 0)
         {
-            yOffset = Mathf.Clamp(yOffset + mouseY, 0.0f, 35f);
-            //transform.Rotate(mouseY, 0, 0);
+            xRotation = Mathf.Clamp(xRotation + mouseYMovement * cameraVerticalSpeed, minPitch, maxPitch);
         }
 
-        transform.rotation = Quaternion.Euler(yOffset, xOffset, 0);
-
+        // Rotate the camera pivot around both y and x and rotate player around the y axis.
+        if (xRotation != 0 || yRotation != 0)
+        {
+            transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
+            player.transform.rotation = Quaternion.Euler(0, yRotation, 0);
+        }
     }
 }
