@@ -25,10 +25,9 @@ public class Portal : MonoBehaviour
     // Enums.
     enum PortalSide
     {
-        Posetive,
+        Positive,
         Negative
     }
-
 
     void Start()
     {
@@ -39,47 +38,52 @@ public class Portal : MonoBehaviour
 
     void LateUpdate()
     {
-        foreach (KeyValuePair<PortalTraveler, PortalSide> traveler in travelers)
+        // Transform travelerTransform = player.transform;
+        // Vector3 position = travelerTransform.position - transform.position;
+        // Debug.Log(position);
+
+        if (travelers.Count > 0)
         {
-            // TODO change to != when the calculation method is actually calculating.
-            if (traveler.Value == CalculatePortalSide(traveler.Key))
+            foreach (KeyValuePair<PortalTraveler, PortalSide> traveler in travelers)
             {
-                player.GetComponent<PortalTraveler>().Travel(destination);
-                RemoveTraveler(traveler.Key);
+                if (traveler.Value != CalculatePortalSide(traveler.Key))
+                {
+                    Debug.Log("Travel!");
+                    traveler.Key.Travel(destination);
+                }
             }
         }
+
     }
 
-    private void MoveCamera()
+    private void MovePortalCamera()
     {
 
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        Debug.Log("Enter");
+        PortalTraveler traveler = other.GetComponent<PortalTraveler>();
 
-        if (other.GetComponent<PortalTraveler>() != null)
+        if (traveler)
         {
-            AddTraveler(other.GetComponent<PortalTraveler>());
+            AddTraveler(traveler);
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        Debug.Log("Exit");
+        PortalTraveler traveler = other.GetComponent<PortalTraveler>();
 
-        if (travelers.ContainsKey(other.GetComponent<PortalTraveler>()))
+        if (travelers.ContainsKey(traveler))
         {
-            // RemoveTraveler(other.GetComponent<PortalTraveler>());
+            RemoveTraveler(traveler);
         }
     }
 
     private void AddTraveler(PortalTraveler traveler)
     {
         travelers.Add(traveler, CalculatePortalSide(traveler));
-
-        Debug.Log(travelers);
     }
 
     private void RemoveTraveler(PortalTraveler traveler)
@@ -99,8 +103,25 @@ public class Portal : MonoBehaviour
 
     private PortalSide CalculatePortalSide(PortalTraveler traveler)
     {
-        // TODO
-        return PortalSide.Posetive;
+        PortalSide travelerSideOfPortal;
+        Transform travelerTransform = traveler.transform;
+        Vector3 travelerOffsetFromPortal = travelerTransform.position - transform.position;
+
+        float portalSide = Vector3.Dot(travelerOffsetFromPortal, Vector3.forward);
+        if (portalSide > 0)
+        {
+            travelerSideOfPortal = PortalSide.Positive;
+        }
+        else if (portalSide < 0)
+        {
+            travelerSideOfPortal = PortalSide.Negative;
+        }
+        else
+        {
+            travelerSideOfPortal = travelers[traveler];
+        }
+
+        return travelerSideOfPortal;
     }
 
     private void SetScreenRenderTexture()

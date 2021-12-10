@@ -47,8 +47,8 @@ public class CameraController : MonoBehaviour
         // Rotate the camera pivot around both y and x and rotate player around the y axis.
         if (xRotation != 0 || yRotation != 0)
         {
-            transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
-            player.transform.rotation = Quaternion.Euler(0, yRotation, 0);
+            // transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
+            // player.transform.rotation = Quaternion.Euler(0, yRotation, 0);
         }
     }
 }

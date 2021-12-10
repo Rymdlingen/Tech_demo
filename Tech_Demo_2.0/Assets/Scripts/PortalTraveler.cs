@@ -26,6 +26,14 @@ public class PortalTraveler : MonoBehaviour
 
     public void Travel(Portal toPortal)
     {
+        Vector3 eulerRotation = new Vector3(transform.eulerAngles.x, toPortal.transform.eulerAngles.y, transform.eulerAngles.z);
+
+
+        Vector3 direction = toPortal.transform.rotation * Vector3.forward;
+
         transform.position = toPortal.transform.position;
+        transform.rotation = Quaternion.Euler(direction);
+        //transform.rotation = toPortal.transform.rotation;
+        Debug.Log("Traveled to " + toPortal.name);
     }
 }
