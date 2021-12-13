@@ -20,7 +20,7 @@ public class Portal : MonoBehaviour
     private Camera playerCamera;
 
     // Can it be string for a name of the portal traveler or can I just use PortalTraveler? Or will that be the same for different travelers??
-    private Dictionary<PortalTraveler, PortalSide> travelers;
+    private List<PortalTraveler> travelers;
 
     // Enums.
     enum PortalSide
@@ -33,23 +33,38 @@ public class Portal : MonoBehaviour
     {
 
         // TODO player = GameObject.FindGameObjectWithTag("Player");
-        travelers = new Dictionary<PortalTraveler, PortalSide> { };
+        travelers = new List<PortalTraveler> { };
     }
 
     void LateUpdate()
     {
-        // Transform travelerTransform = player.transform;
-        // Vector3 position = travelerTransform.position - transform.position;
-        // Debug.Log(position);
-
         if (travelers.Count > 0)
         {
-            foreach (KeyValuePair<PortalTraveler, PortalSide> traveler in travelers)
+            for (int thisTraveler = 0; thisTraveler < travelers.Count; thisTraveler++)
             {
-                if (traveler.Value != CalculatePortalSide(traveler.Key))
+                PortalTraveler traveler = travelers[thisTraveler];
+                // PortalSide previousPortalSide = CalculatePortalSide(traveler.previousPosition);
+                // PortalSide currentPortalSide = CalculatePortalSide(traveler.transform.position);
+
+                int previousPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, Vector3.forward));
+                int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, Vector3.forward));
+
+                Debug.Log("previous side: " + previousPortalSide.ToString());
+                Debug.Log("current side: " + currentPortalSide.ToString());
+
+                if (previousPortalSide != currentPortalSide)
                 {
-                    Debug.Log("Travel!");
-                    traveler.Key.Travel(destination);
+                    Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+
+                    traveler.Travel(matrix.GetColumn(3), matrix.rotation);
+
+                    destination.AddTraveler(traveler);
+                    RemoveTraveler(traveler);
+                    thisTraveler--;
+                }
+                else
+                {
+                    //traveler.previousTransform = traveler.transform;
                 }
             }
         }
@@ -75,7 +90,7 @@ public class Portal : MonoBehaviour
     {
         PortalTraveler traveler = other.GetComponent<PortalTraveler>();
 
-        if (travelers.ContainsKey(traveler))
+        if (travelers.Contains(traveler))
         {
             RemoveTraveler(traveler);
         }
@@ -83,7 +98,8 @@ public class Portal : MonoBehaviour
 
     private void AddTraveler(PortalTraveler traveler)
     {
-        travelers.Add(traveler, CalculatePortalSide(traveler));
+        traveler.previousPosition = traveler.transform.position;
+        travelers.Add(traveler);
     }
 
     private void RemoveTraveler(PortalTraveler traveler)
@@ -101,24 +117,19 @@ public class Portal : MonoBehaviour
 
     }
 
-    private PortalSide CalculatePortalSide(PortalTraveler traveler)
+    private PortalSide CalculatePortalSide(Vector3 travelerPosition)
     {
         PortalSide travelerSideOfPortal;
-        Transform travelerTransform = traveler.transform;
-        Vector3 travelerOffsetFromPortal = travelerTransform.position - transform.position;
+        Vector3 travelerOffsetFromPortal = travelerPosition - transform.position;
 
         float portalSide = Vector3.Dot(travelerOffsetFromPortal, Vector3.forward);
         if (portalSide > 0)
         {
             travelerSideOfPortal = PortalSide.Positive;
         }
-        else if (portalSide < 0)
-        {
-            travelerSideOfPortal = PortalSide.Negative;
-        }
         else
         {
-            travelerSideOfPortal = travelers[traveler];
+            travelerSideOfPortal = PortalSide.Negative;
         }
 
         return travelerSideOfPortal;

@@ -4,13 +4,7 @@ using UnityEngine;
 
 public class PortalTraveler : MonoBehaviour
 {
-    // TODO is ID better?
-    public string Name
-    {
-        get;
-        [SerializeField]
-        private set;
-    }
+    public Vector3 previousPosition { get; set; }
 
     // Start is called before the first frame update
     void Start()
@@ -24,16 +18,9 @@ public class PortalTraveler : MonoBehaviour
 
     }
 
-    public void Travel(Portal toPortal)
+    public void Travel(Vector3 toPosition, Quaternion newRotation)
     {
-        Vector3 eulerRotation = new Vector3(transform.eulerAngles.x, toPortal.transform.eulerAngles.y, transform.eulerAngles.z);
-
-
-        Vector3 direction = toPortal.transform.rotation * Vector3.forward;
-
-        transform.position = toPortal.transform.position;
-        transform.rotation = Quaternion.Euler(direction);
-        //transform.rotation = toPortal.transform.rotation;
-        Debug.Log("Traveled to " + toPortal.name);
+        transform.position = toPosition;
+        transform.rotation = newRotation;
     }
 }
