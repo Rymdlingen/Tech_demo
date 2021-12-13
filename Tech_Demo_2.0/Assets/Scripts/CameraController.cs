@@ -21,8 +21,8 @@ public class CameraController : MonoBehaviour
     void Start()
     {
         // Save the start value of the camera pivots x and y rotation. 
-        xRotation = transform.rotation.x;
-        yRotation = transform.rotation.y;
+        yRotation = transform.eulerAngles.y;
+        xRotation = transform.eulerAngles.x;
     }
 
     // Update is called once per frame
@@ -31,7 +31,7 @@ public class CameraController : MonoBehaviour
         // Store mouse movement.
         mouseXMovement = Input.GetAxis("Mouse X");
         mouseYMovement = Input.GetAxis("Mouse Y");
-
+        yRotation = transform.eulerAngles.y;
         // Add the mouse x movement to the y rotation in the speed of horizontal camera movement.
         if (mouseXMovement != 0)
         {
@@ -45,10 +45,10 @@ public class CameraController : MonoBehaviour
         }
 
         // Rotate the camera pivot around both y and x and rotate player around the y axis.
-        if (xRotation != 0 || yRotation != 0)
+        if (mouseXMovement != 0 || mouseYMovement != 0)
         {
-            transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
             player.transform.rotation = Quaternion.Euler(0, yRotation, 0);
+            transform.rotation = Quaternion.Euler(xRotation, yRotation, 0);
         }
     }
 }

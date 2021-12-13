@@ -22,38 +22,36 @@ public class Portal : MonoBehaviour
     // Can it be string for a name of the portal traveler or can I just use PortalTraveler? Or will that be the same for different travelers??
     private List<PortalTraveler> travelers;
 
+    /*
     // Enums.
     enum PortalSide
     {
         Positive,
         Negative
     }
+    */
 
     void Start()
     {
-
         // TODO player = GameObject.FindGameObjectWithTag("Player");
         travelers = new List<PortalTraveler> { };
     }
 
     void LateUpdate()
     {
+
         if (travelers.Count > 0)
         {
             for (int thisTraveler = 0; thisTraveler < travelers.Count; thisTraveler++)
             {
                 PortalTraveler traveler = travelers[thisTraveler];
-                // PortalSide previousPortalSide = CalculatePortalSide(traveler.previousPosition);
-                // PortalSide currentPortalSide = CalculatePortalSide(traveler.transform.position);
 
-                int previousPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, Vector3.forward));
-                int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, Vector3.forward));
+                int startPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, transform.right));
+                int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
 
-                Debug.Log("previous side: " + previousPortalSide.ToString());
-                Debug.Log("current side: " + currentPortalSide.ToString());
-
-                if (previousPortalSide != currentPortalSide)
+                if (startPortalSide != currentPortalSide)
                 {
+                    // Debug.Log("Travel " + name + " " + startPortalSide + " " + currentPortalSide);
                     Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
 
                     traveler.Travel(matrix.GetColumn(3), matrix.rotation);
@@ -62,13 +60,8 @@ public class Portal : MonoBehaviour
                     RemoveTraveler(traveler);
                     thisTraveler--;
                 }
-                else
-                {
-                    //traveler.previousTransform = traveler.transform;
-                }
             }
         }
-
     }
 
     private void MovePortalCamera()
@@ -78,6 +71,8 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // Debug.Log("Enter " + this.name);
+
         PortalTraveler traveler = other.GetComponent<PortalTraveler>();
 
         if (traveler)
@@ -88,9 +83,11 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        // Debug.Log("Exit" + this.name);
+
         PortalTraveler traveler = other.GetComponent<PortalTraveler>();
 
-        if (travelers.Contains(traveler))
+        if (traveler)
         {
             RemoveTraveler(traveler);
         }
@@ -98,13 +95,22 @@ public class Portal : MonoBehaviour
 
     private void AddTraveler(PortalTraveler traveler)
     {
-        traveler.previousPosition = traveler.transform.position;
-        travelers.Add(traveler);
+        if (!travelers.Contains(traveler))
+        {
+            traveler.previousPosition = traveler.transform.position;
+            travelers.Add(traveler);
+            // int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
+            // Debug.Log("Added traveler at side " + currentPortalSide + " in portal " + this.name);
+        }
     }
 
     private void RemoveTraveler(PortalTraveler traveler)
     {
-        travelers.Remove(traveler);
+        if (travelers.Contains(traveler))
+        {
+            travelers.Remove(traveler);
+            // Debug.Log("Removed traveler from portal " + this.name);
+        }
     }
 
     private void TrackTravelers()
@@ -117,6 +123,7 @@ public class Portal : MonoBehaviour
 
     }
 
+    /*
     private PortalSide CalculatePortalSide(Vector3 travelerPosition)
     {
         PortalSide travelerSideOfPortal;
@@ -134,6 +141,7 @@ public class Portal : MonoBehaviour
 
         return travelerSideOfPortal;
     }
+    */
 
     private void SetScreenRenderTexture()
     {
