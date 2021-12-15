@@ -9,11 +9,15 @@ public class Portal : MonoBehaviour
     {
         get; private set;
     }
+    public MeshRenderer screenMeshRenderer
+    {
+        get; private set;
+    }
 
     // Private fields.
     [SerializeField] private Portal destination;
     private Camera portalCamera;
-    private MeshRenderer screenMeshRenderer;
+
     private RenderTexture screenRenderTexture;
 
     [SerializeField] private GameObject player;
@@ -33,8 +37,13 @@ public class Portal : MonoBehaviour
 
     void Start()
     {
+        screenMeshRenderer = transform.Find("Portal Screen").GetComponent<MeshRenderer>();
         // TODO player = GameObject.FindGameObjectWithTag("Player");
+        portalCamera = GetComponentInChildren<Camera>();
+        portalCamera.enabled = false;
         travelers = new List<PortalTraveler> { };
+        playerCamera = player.GetComponentInChildren<Camera>();
+        screenMeshRenderer.material.SetInt("displayMask", 1);
     }
 
     void LateUpdate()
@@ -62,11 +71,56 @@ public class Portal : MonoBehaviour
                 }
             }
         }
+
+        Render();
+    }
+
+    public void Render()
+    {
+        // Don't move the camera if the player doesn't see the portal screen.
+        if (!VisibleFromCamera(destination.screenMeshRenderer, playerCamera))
+        {
+            return;
+        }
+
+        SetScreenRenderTexture();
+        screenMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+        destination.screenMeshRenderer.material.SetInt("displayMask", 0);
+        MovePortalCamera();
+        portalCamera.Render();
+        destination.screenMeshRenderer.material.SetInt("displayMask", 1);
+        screenMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+    }
+
+    private void SetScreenRenderTexture()
+    {
+        if (screenRenderTexture == null || screenRenderTexture.width != Screen.width || screenRenderTexture.height != Screen.height)
+        {
+            if (screenRenderTexture != null)
+            {
+                screenRenderTexture.Release();
+            }
+
+            screenRenderTexture = new RenderTexture(Screen.width, Screen.height, 0);
+            // Render the portal camera view to the screen render texture.
+            portalCamera.targetTexture = screenRenderTexture;
+            // Display the portal camera view on the destination portals screen.
+            destination.screenMeshRenderer.material.SetTexture("_MainTex", screenRenderTexture);
+        }
     }
 
     private void MovePortalCamera()
     {
+        // Debug.Log("Moving camera next to " + name);
+        Matrix4x4 playerCameraToPortal = transform.localToWorldMatrix * destination.transform.worldToLocalMatrix * playerCamera.transform.localToWorldMatrix;
+        portalCamera.transform.SetPositionAndRotation(playerCameraToPortal.GetColumn(3), playerCameraToPortal.rotation);
+    }
 
+    // Copied from the code for Sebastians portal video.
+    public static bool VisibleFromCamera(Renderer renderer, Camera camera)
+    {
+        Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
+        return GeometryUtility.TestPlanesAABB(frustumPlanes, renderer.bounds);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -143,8 +197,5 @@ public class Portal : MonoBehaviour
     }
     */
 
-    private void SetScreenRenderTexture()
-    {
 
-    }
 }
