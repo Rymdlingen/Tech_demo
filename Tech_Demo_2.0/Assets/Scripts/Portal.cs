@@ -26,6 +26,8 @@ public class Portal : MonoBehaviour
     // Can it be string for a name of the portal traveler or can I just use PortalTraveler? Or will that be the same for different travelers??
     private List<PortalTraveler> travelers;
 
+    bool useFixed = false;
+
     /*
     // Enums.
     enum PortalSide
@@ -44,35 +46,98 @@ public class Portal : MonoBehaviour
         travelers = new List<PortalTraveler> { };
         playerCamera = player.GetComponentInChildren<Camera>();
         screenMeshRenderer.material.SetInt("displayMask", 1);
+        isActivated = true;
+        screenMeshRenderer.enabled = isActivated;
+    }
+
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            isActivated = !isActivated;
+            screenMeshRenderer.enabled = isActivated;
+        }
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            useFixed = !useFixed;
+        }
     }
 
     void LateUpdate()
     {
-
-        if (travelers.Count > 0)
+        if (!useFixed)
         {
-            for (int thisTraveler = 0; thisTraveler < travelers.Count; thisTraveler++)
+            if (isActivated)
             {
-                PortalTraveler traveler = travelers[thisTraveler];
-
-                int startPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, transform.right));
-                int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
-
-                if (startPortalSide != currentPortalSide)
+                if (travelers.Count > 0)
                 {
-                    // Debug.Log("Travel " + name + " " + startPortalSide + " " + currentPortalSide);
-                    Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+                    for (int thisTraveler = 0; thisTraveler < travelers.Count; thisTraveler++)
+                    {
+                        PortalTraveler traveler = travelers[thisTraveler];
 
-                    traveler.Travel(matrix.GetColumn(3), matrix.rotation);
+                        int startPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, transform.right));
+                        int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
 
-                    destination.AddTraveler(traveler);
-                    RemoveTraveler(traveler);
-                    thisTraveler--;
+                        if (startPortalSide != currentPortalSide)
+                        {
+                            // Debug.Log("Travel " + name + " " + startPortalSide + " " + currentPortalSide);
+                            Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+
+                            traveler.Travel(matrix.GetColumn(3), matrix.rotation);
+
+                            destination.AddTraveler(traveler);
+                            RemoveTraveler(traveler);
+                            thisTraveler--;
+                        }
+                    }
                 }
+
+                Render();
+            }
+            else
+            {
+
             }
         }
+    }
 
-        Render();
+    private void FixedUpdate()
+    {
+        if (useFixed)
+        {
+            if (isActivated)
+            {
+                if (travelers.Count > 0)
+                {
+                    for (int thisTraveler = 0; thisTraveler < travelers.Count; thisTraveler++)
+                    {
+                        PortalTraveler traveler = travelers[thisTraveler];
+
+                        int startPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, transform.right));
+                        int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
+
+                        if (startPortalSide != currentPortalSide)
+                        {
+                            // Debug.Log("Travel " + name + " " + startPortalSide + " " + currentPortalSide);
+                            Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+
+                            traveler.Travel(matrix.GetColumn(3), matrix.rotation);
+
+                            destination.AddTraveler(traveler);
+                            RemoveTraveler(traveler);
+                            thisTraveler--;
+                        }
+                    }
+                }
+
+                Render();
+            }
+            else
+            {
+
+            }
+        }
     }
 
     public void Render()
