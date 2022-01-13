@@ -26,8 +26,6 @@ public class Portal : MonoBehaviour
     // Can it be string for a name of the portal traveler or can I just use PortalTraveler? Or will that be the same for different travelers??
     private List<PortalTraveler> travelers;
 
-    bool useFixed = false;
-
     /*
     // Enums.
     enum PortalSide
@@ -58,84 +56,41 @@ public class Portal : MonoBehaviour
             screenMeshRenderer.enabled = isActivated;
         }
 
-        if (Input.GetKeyDown(KeyCode.F))
+        if (travelers.Count > 0)
         {
-            useFixed = !useFixed;
+            foreach (PortalTraveler traveler in travelers)
+            {
+                Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+
+                traveler.cloneCharacter.transform.SetPositionAndRotation(matrix.GetColumn(3), matrix.rotation);
+            }
         }
     }
 
     void LateUpdate()
     {
-        if (!useFixed)
+        if (isActivated)
         {
-            if (isActivated)
-            {
-                if (travelers.Count > 0)
-                {
-                    for (int thisTraveler = 0; thisTraveler < travelers.Count; thisTraveler++)
-                    {
-                        PortalTraveler traveler = travelers[thisTraveler];
-
-                        int startPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, transform.right));
-                        int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
-
-                        if (startPortalSide != currentPortalSide)
-                        {
-                            // Debug.Log("Travel " + name + " " + startPortalSide + " " + currentPortalSide);
-                            Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
-
-                            traveler.Travel(matrix.GetColumn(3), matrix.rotation);
-
-                            destination.AddTraveler(traveler);
-                            RemoveTraveler(traveler);
-                            thisTraveler--;
-                        }
-                    }
-                }
-
-                Render();
-            }
-            else
-            {
-
-            }
+            Render();
         }
     }
 
     private void FixedUpdate()
     {
-        if (useFixed)
+        if (isActivated)
         {
-            if (isActivated)
+            if (travelers.Count > 0)
             {
-                if (travelers.Count > 0)
+                for (int traveler = 0; traveler < travelers.Count; traveler++)
                 {
-                    for (int thisTraveler = 0; thisTraveler < travelers.Count; thisTraveler++)
+                    int totalTravelers = travelers.Count;
+                    MoveTraveler(travelers[traveler]);
+
+                    if (totalTravelers > travelers.Count)
                     {
-                        PortalTraveler traveler = travelers[thisTraveler];
-
-                        int startPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, transform.right));
-                        int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
-
-                        if (startPortalSide != currentPortalSide)
-                        {
-                            // Debug.Log("Travel " + name + " " + startPortalSide + " " + currentPortalSide);
-                            Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
-
-                            traveler.Travel(matrix.GetColumn(3), matrix.rotation);
-
-                            destination.AddTraveler(traveler);
-                            RemoveTraveler(traveler);
-                            thisTraveler--;
-                        }
+                        traveler--;
                     }
                 }
-
-                Render();
-            }
-            else
-            {
-
             }
         }
     }
@@ -220,6 +175,7 @@ public class Portal : MonoBehaviour
         {
             traveler.previousPosition = traveler.transform.position;
             travelers.Add(traveler);
+            traveler.EnterPortal();
             // int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
             // Debug.Log("Added traveler at side " + currentPortalSide + " in portal " + this.name);
         }
@@ -230,6 +186,7 @@ public class Portal : MonoBehaviour
         if (travelers.Contains(traveler))
         {
             travelers.Remove(traveler);
+            traveler.ExitPortal();
             // Debug.Log("Removed traveler from portal " + this.name);
         }
     }
@@ -241,7 +198,24 @@ public class Portal : MonoBehaviour
 
     private void MoveTraveler(PortalTraveler traveler)
     {
+        int startPortalSide = System.Math.Sign(Vector3.Dot(traveler.previousPosition - transform.position, transform.right));
+        int currentPortalSide = System.Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
 
+        Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+
+        if (startPortalSide != currentPortalSide)
+        {
+            // Debug.Log("Travel " + name + " " + startPortalSide + " " + currentPortalSide);
+            traveler.Travel(matrix.GetColumn(3), matrix.rotation);
+
+            destination.AddTraveler(traveler);
+            RemoveTraveler(traveler);
+
+        }
+        else
+        {
+            // traveler.cloneCharacter.transform.SetPositionAndRotation(matrix.GetColumn(3), matrix.rotation);
+        }
     }
 
     /*
@@ -266,6 +240,8 @@ public class Portal : MonoBehaviour
 
     private void OnDrawGizmos()
     {
+        if (!Application.isPlaying) return;
+
         Matrix4x4 playerCameraToPortal = transform.localToWorldMatrix * destination.transform.worldToLocalMatrix * playerCamera.transform.localToWorldMatrix;
 
         Gizmos.color = new Color(0.0f, 0.0f, 0.75f, 0.75f);
@@ -279,6 +255,8 @@ public class Portal : MonoBehaviour
         Gizmos.matrix = Matrix4x4.TRS(destination.portalCamera.transform.position, destination.portalCamera.transform.rotation, Vector3.one);
 
         Gizmos.DrawFrustum(Vector3.zero, destination.portalCamera.fieldOfView, destination.portalCamera.farClipPlane, destination.portalCamera.nearClipPlane, destination.portalCamera.aspect);
+
+
     }
 
     void UpdateSliceParams(PortalTraveler traveler)
@@ -292,12 +270,15 @@ public class Portal : MonoBehaviour
         Vector3 slicePos = transform.position;
         Vector3 cloneSlicePos = destination.transform.position;
 
+        /*
         // Adjust slice offset so that when player standing on other side of portal to the object, the slice doesn't clip through
         float sliceOffsetDst = 0;
         float cloneSliceOffsetDst = 0;
         float screenThickness = screenMeshRenderer.transform.localScale.z;
 
         bool playerSameSideAsTraveller = SameSideOfPortal(playerCam.transform.position, traveler.transform.position);
+        if (side > 0)
+
         if (!playerSameSideAsTraveller)
         {
             sliceOffsetDst = -screenThickness;
@@ -307,17 +288,18 @@ public class Portal : MonoBehaviour
         {
             cloneSliceOffsetDst = -screenThickness;
         }
+        */
 
         // Apply parameters
-        for (int i = 0; i < traveler.originalMaterials.Length; i++)
+        for (int i = 0; i < traveler.playerMaterials.Length; i++)
         {
-            traveler.originalMaterials[i].SetVector("sliceCentre", slicePos);
-            traveler.originalMaterials[i].SetVector("sliceNormal", sliceNormal);
-            traveler.originalMaterials[i].SetFloat("sliceOffsetDst", sliceOffsetDst);
+            traveler.playerMaterials[i].SetVector("sliceCentre", slicePos);
+            traveler.playerMaterials[i].SetVector("sliceNormal", sliceNormal);
+            // traveler.originalMaterials[i].SetFloat("sliceOffsetDst", sliceOffsetDst);
 
             traveler.cloneMaterials[i].SetVector("sliceCentre", cloneSlicePos);
             traveler.cloneMaterials[i].SetVector("sliceNormal", cloneSliceNormal);
-            traveler.cloneMaterials[i].SetFloat("sliceOffsetDst", cloneSliceOffsetDst);
+            // traveler.cloneMaterials[i].SetFloat("sliceOffsetDst", cloneSliceOffsetDst);
 
         }
 
