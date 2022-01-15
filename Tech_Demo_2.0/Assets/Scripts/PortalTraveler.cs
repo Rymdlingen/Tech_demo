@@ -4,10 +4,8 @@ using UnityEngine;
 
 public class PortalTraveler : MonoBehaviour
 {
-    public Vector3 previousPosition { get; set; }
-
-    private GameObject playerCharacter;
-    public GameObject cloneCharacter { get; private set; }
+    public GameObject originalTraveler { get; private set; }
+    public GameObject cloneTraveler { get; private set; }
 
     public Material[] playerMaterials { get; private set; }
     public Material[] cloneMaterials { get; private set; }
@@ -15,9 +13,7 @@ public class PortalTraveler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        playerCharacter = gameObject.transform.GetComponentInChildren<MeshRenderer>().gameObject;
-        // playerMaterials = GetMaterials(playerCharacter);
-
+        originalTraveler = gameObject.transform.GetComponentInChildren<MeshRenderer>()?.gameObject;
     }
 
     // Update is called once per frame
@@ -26,24 +22,39 @@ public class PortalTraveler : MonoBehaviour
 
     }
 
+    private void FixedUpdate()
+    {
+
+    }
+
     public virtual void EnterPortal()
     {
-        if (cloneCharacter == null)
+        /*if (!originalTraveler)
         {
-            cloneCharacter = Instantiate(playerCharacter);
+            return;
+        }*/
+
+        if (cloneTraveler == null)
+        {
+            cloneTraveler = Instantiate(originalTraveler);
             // cloneCharacter.transform.parent = playerCharacter.transform.parent;
-            cloneCharacter.transform.localScale = playerCharacter.transform.localScale;
+            cloneTraveler.transform.localScale = originalTraveler.transform.localScale;
             // cloneMaterials = GetMaterials(cloneCharacter);
         }
         else
         {
-            cloneCharacter.SetActive(true);
+            cloneTraveler.SetActive(true);
         }
     }
 
     public virtual void ExitPortal()
     {
-        cloneCharacter.SetActive(false);
+        if (!originalTraveler)
+        {
+            return;
+        }
+
+        cloneTraveler.SetActive(false);
     }
 
     public void Travel(Vector3 toPosition, Quaternion newRotation)
@@ -52,6 +63,7 @@ public class PortalTraveler : MonoBehaviour
         transform.rotation = newRotation;
     }
 
+    /*
     private Material[] GetMaterials(GameObject model)
     {
         List<Material> materials = new List<Material> { };
@@ -80,4 +92,5 @@ public class PortalTraveler : MonoBehaviour
 
         return materials;
     }
+    */
 }

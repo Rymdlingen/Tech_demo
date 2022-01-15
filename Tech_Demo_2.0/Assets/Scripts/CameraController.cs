@@ -17,8 +17,6 @@ public class CameraController : MonoBehaviour
     private float mouseXMovement;
     private float mouseYMovement;
 
-    private GameObject clone;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -30,11 +28,6 @@ public class CameraController : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (clone == null)
-        {
-            clone = player.GetComponent<PortalTraveler>().cloneCharacter;
-        }
-
         // Store mouse movement.
         mouseXMovement = Input.GetAxis("Mouse X");
         mouseYMovement = Input.GetAxis("Mouse Y");
