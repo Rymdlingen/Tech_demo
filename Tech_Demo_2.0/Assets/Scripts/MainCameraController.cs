@@ -13,9 +13,9 @@ public class MainCameraController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
-        transform.position += target.travelerPositionDelta;
+        transform.Translate(target.travelerPositionDelta);
 
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + target.travelerRotationDelta);
     }

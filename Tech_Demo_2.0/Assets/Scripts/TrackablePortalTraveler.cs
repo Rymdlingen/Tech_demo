@@ -6,8 +6,10 @@ public class TrackablePortalTraveler : PortalTraveler
 {
     [SerializeField] private Transform trackingTarget;
     public Vector3 previousTravelerPosition { get; private set; }
+    public Matrix4x4 previousTravelerWorldToLocalMatrix { get; private set; }
     public Vector3 latestTravelerPosition { get; private set; }
-    public Vector3 travelerPositionDelta => latestTravelerPosition - previousTravelerPosition;
+    public Matrix4x4 latestTravelerWorldToLocalMatrix { get; private set; }
+    public Vector3 travelerPositionDelta => previousTravelerWorldToLocalMatrix.MultiplyVector(latestTravelerPosition - previousTravelerPosition);
 
     public Vector3 previousTravelerRotation { get; private set; }
     public Vector3 latestTravelerRotation { get; private set; }
@@ -22,7 +24,7 @@ public class TrackablePortalTraveler : PortalTraveler
     }
 
     // Update is called once per frame
-    void Update()
+    void LateUpdate()
     {
         UpdateTracking();
     }
@@ -39,6 +41,9 @@ public class TrackablePortalTraveler : PortalTraveler
         previousTravelerPosition = trackingTarget.position;
         latestTravelerPosition = trackingTarget.position;
 
+        previousTravelerWorldToLocalMatrix = trackingTarget.worldToLocalMatrix;
+        latestTravelerWorldToLocalMatrix = trackingTarget.worldToLocalMatrix;
+
         previousTravelerRotation = trackingTarget.rotation.eulerAngles;
         latestTravelerRotation = trackingTarget.rotation.eulerAngles;
     }
@@ -47,6 +52,9 @@ public class TrackablePortalTraveler : PortalTraveler
     {
         previousTravelerPosition = latestTravelerPosition;
         latestTravelerPosition = trackingTarget.position;
+
+        previousTravelerWorldToLocalMatrix = latestTravelerWorldToLocalMatrix;
+        latestTravelerWorldToLocalMatrix = trackingTarget.worldToLocalMatrix;
 
         previousTravelerRotation = latestTravelerRotation;
         latestTravelerRotation = trackingTarget.rotation.eulerAngles;

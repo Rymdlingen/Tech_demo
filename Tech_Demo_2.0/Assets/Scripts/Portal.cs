@@ -62,6 +62,12 @@ public class Portal : MonoBehaviour
         {
             foreach (PortalTraveler traveler in travelers)
             {
+                // If the traveler doesn't have a clone, skip this traveler.
+                if (!traveler.cloneTraveler)
+                {
+                    continue;
+                }
+
                 // The world position of the traveler if it would be next to the destination portal instead of the portal.
                 Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
 
@@ -188,7 +194,7 @@ public class Portal : MonoBehaviour
     {
         PortalTraveler traveler = other.GetComponent<PortalTraveler>();
         // Keep the clone visible as long as it is in the portal.
-        if (traveler && !traveler.cloneTraveler.activeInHierarchy)
+        if (traveler && traveler.cloneTraveler && !traveler.cloneTraveler.activeInHierarchy)
         {
             traveler.cloneTraveler.SetActive(true);
         }
@@ -342,6 +348,8 @@ public class Portal : MonoBehaviour
         }
     }
 
+
+    // TODO make the screen not clip.
     float ProtectScreenFromClipping(Vector3 viewPoint)
     {
         float halfHeight = mainCamera.nearClipPlane * Mathf.Tan(mainCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
