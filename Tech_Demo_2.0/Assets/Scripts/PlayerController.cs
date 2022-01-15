@@ -60,4 +60,16 @@ public class PlayerController : MonoBehaviour
         // Keep the character on the ground.
         transform.position = new Vector3(transform.position.x, hit.point.y + transform.lossyScale.y, transform.position.z);
     }
+
+    private void OnDrawGizmos()
+    {
+        if (!Application.isPlaying) return;
+
+        Gizmos.color = new Color(0.0f, 0.0f, 0.75f, 0.75f);
+
+        // Convert the local coordinate values into world
+        // coordinates for the matrix transformation.
+        Gizmos.DrawCube(transform.Find("Camera pivot").Find("Player Camera").position, Vector3.one);
+    }
+
 }

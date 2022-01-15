@@ -11,7 +11,7 @@ public class PortalTraveler : MonoBehaviour
     public Material[] cloneMaterials { get; private set; }
 
     // Start is called before the first frame update
-    void Start()
+    protected virtual void Start()
     {
         originalTraveler = gameObject.transform.GetComponentInChildren<MeshRenderer>()?.gameObject;
     }
@@ -29,10 +29,11 @@ public class PortalTraveler : MonoBehaviour
 
     public virtual void EnterPortal()
     {
-        /*if (!originalTraveler)
+        if (!originalTraveler)
         {
             return;
-        }*/
+        }
+
 
         if (cloneTraveler == null)
         {

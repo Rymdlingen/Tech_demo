@@ -268,14 +268,12 @@ public class Portal : MonoBehaviour
         // Convert the local coordinate values into world
         // coordinates for the matrix transformation.
         Gizmos.matrix = playerCameraToPortal;
-        // Gizmos.DrawCube(Vector3.zero, Vector3.one);
+        //Gizmos.DrawCube(player.transform.Find("Camera pivot").Find("Player Camera").position, Vector3.one);
 
 
         Gizmos.matrix = Matrix4x4.TRS(destination.portalCamera.transform.position, destination.portalCamera.transform.rotation, Vector3.one);
 
         Gizmos.DrawFrustum(Vector3.zero, destination.portalCamera.fieldOfView, destination.portalCamera.farClipPlane, destination.portalCamera.nearClipPlane, destination.portalCamera.aspect);
-
-
     }
 
     void UpdateSliceParams(PortalTraveler traveler)
@@ -327,7 +325,7 @@ public class Portal : MonoBehaviour
     private void SetNearClipPlane()
     {
         Transform clipPlane = screenMeshRenderer.transform;
-        int dot = System.Math.Sign(Vector3.Dot(clipPlane.right, screenMeshRenderer.transform.position - portalCamera.transform.position));
+        int dot = Math.Sign(Vector3.Dot(clipPlane.right, screenMeshRenderer.transform.position - portalCamera.transform.position));
 
         Vector3 camSpacePos = portalCamera.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
         Vector3 camSpaceNormal = portalCamera.worldToCameraMatrix.MultiplyVector(clipPlane.right) * dot;
