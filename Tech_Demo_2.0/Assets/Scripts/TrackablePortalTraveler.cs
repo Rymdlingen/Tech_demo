@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class TrackablePortalTraveler : PortalTraveler
 {
-    [SerializeField] private Transform trackingTarget;
+    [SerializeField] public Transform trackingTarget;
     public Vector3 previousTravelerPosition { get; private set; }
     public Matrix4x4 previousTravelerWorldToLocalMatrix { get; private set; }
     public Vector3 latestTravelerPosition { get; private set; }

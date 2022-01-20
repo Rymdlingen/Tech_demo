@@ -23,9 +23,9 @@ Shader "Custom/PortalScreen"
             };
 
             struct v2f
-            {                
-                float4 screenPos : TEXCOORD0;
-                float4 vertex : SV_POSITION;
+            {      
+                float4 vertex : SV_POSITION;         
+                float4 screenPos : TEXCOORD0;                
             };
 
             sampler2D _MainTex;
@@ -50,5 +50,5 @@ Shader "Custom/PortalScreen"
             ENDCG
         }
     }
-    Fallback "Standard" // for shadows
+    FallBack "Standard" // for shadows
 }

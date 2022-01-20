@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 using System;
 
 public class Portal : MonoBehaviour
@@ -15,7 +16,7 @@ public class Portal : MonoBehaviour
         get; private set;
     }
 
-    // Private fields. TODO can I chane this to find all the values it needs through the script?
+    // Private fields. TODO can I change this to find all the values it needs through the script?
     [SerializeField] private Portal destination;
     private Camera portalCamera;
 
@@ -137,6 +138,8 @@ public class Portal : MonoBehaviour
         portalCamera.Render();
         destination.screenMeshRenderer.material.SetInt("displayMask", 1);
         screenMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+
+        ProtectScreenFromClipping(mainCamera.transform.position);
     }
 
     private void SetScreenRenderTexture()
@@ -218,6 +221,9 @@ public class Portal : MonoBehaviour
             travelersStartPositions.Remove(traveler);
             traveler.ExitPortal();
         }
+
+
+
     }
 
     private void TrackTravelers()
@@ -228,18 +234,17 @@ public class Portal : MonoBehaviour
     private void MoveTraveler(PortalTraveler traveler)
     {
 
-        int characterStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.right));
-        int characterCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
+        int travelerStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.right));
+        int travelerCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
 
         Matrix4x4 cameraMatrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
 
-        if (characterStartPortalSide != characterCurrentPortalSide)
+        if (travelerStartPortalSide != travelerCurrentPortalSide)
         {
             traveler.Travel(cameraMatrix.GetColumn(3), cameraMatrix.rotation);
 
             destination.AddTraveler(traveler);
             RemoveTraveler(traveler);
-
         }
     }
 
@@ -358,9 +363,9 @@ public class Portal : MonoBehaviour
         float screenThickness = dstToNearClipPlaneCorner;
 
         Transform screenT = screenMeshRenderer.transform;
-        bool camFacingSameDirAsPortal = Vector3.Dot(transform.right, transform.position - viewPoint) > 0;
-        screenT.localScale = new Vector3(screenT.localScale.x, screenT.localScale.y, screenThickness);
-        screenT.localPosition = Vector3.forward * screenThickness * ((camFacingSameDirAsPortal) ? 0.5f : -0.5f);
+        bool camFacingSameDirAsPortal = Vector3.Dot(transform.right, transform.position - mainCamera.transform.position) > 0;
+        screenT.localScale = new Vector3(screenThickness, screenT.localScale.y, screenT.localScale.z);
+        screenT.localPosition = Vector3.right * screenThickness * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
         return screenThickness;
     }
 }
