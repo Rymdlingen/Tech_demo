@@ -8,7 +8,7 @@ Shader "Custom/PortalScreen"
     {
         Tags { "RenderType"="Opaque" }
         LOD 100
-        Cull Off
+        Cull Front
 
         Pass
         {

@@ -11,7 +11,9 @@ public class PortalTraveler : MonoBehaviour
     public Material[] playerMaterials { get; private set; }
     public Material[] cloneMaterials { get; private set; }
 
-    public event Action<PortalTraveler> traveled;
+    public Portal lastUsedPortal { get; private set; }
+
+    public event Action<PortalTraveler, Portal, Portal> traveled;
 
     // Start is called before the first frame update
     protected virtual void Start()
@@ -61,12 +63,14 @@ public class PortalTraveler : MonoBehaviour
         cloneTraveler.SetActive(false);
     }
 
-    public void Travel(Vector3 toPosition, Quaternion newRotation)
+    public void Travel(Vector3 toPosition, Quaternion newRotation, Portal traveledFrom, Portal traveledTo)
     {
+        lastUsedPortal = traveledFrom;
+
         transform.position = toPosition;
         transform.rotation = newRotation;
 
-        traveled?.Invoke(this);
+        traveled?.Invoke(this, traveledFrom, traveledTo);
     }
 
     /*

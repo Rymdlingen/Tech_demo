@@ -245,7 +245,7 @@ public class Portal : MonoBehaviour
         if (travelerStartPortalSide != travelerCurrentPortalSide)
         {
             RemoveTraveler(traveler);
-            traveler.Travel(cameraMatrix.GetColumn(3), cameraMatrix.rotation);
+            traveler.Travel(cameraMatrix.GetColumn(3), cameraMatrix.rotation, this, destination);
 
             destination.AddTraveler(traveler);
 
