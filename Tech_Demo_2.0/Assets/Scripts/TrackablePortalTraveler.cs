@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,6 +15,8 @@ public class TrackablePortalTraveler : PortalTraveler
     public Vector3 previousTravelerRotation { get; private set; }
     public Vector3 latestTravelerRotation { get; private set; }
     public Vector3 travelerRotationDelta => latestTravelerRotation - previousTravelerRotation;
+
+    public event Action trackingUpdated;
 
 
     // Start is called before the first frame update
@@ -58,5 +61,7 @@ public class TrackablePortalTraveler : PortalTraveler
 
         previousTravelerRotation = latestTravelerRotation;
         latestTravelerRotation = trackingTarget.rotation.eulerAngles;
+
+        trackingUpdated?.Invoke();
     }
 }

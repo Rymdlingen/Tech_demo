@@ -359,7 +359,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   destination: {fileID: 0}
-  player: {fileID: 0}
 --- !u!1 &7858784660747950771
 GameObject:
   m_ObjectHideFlags: 0

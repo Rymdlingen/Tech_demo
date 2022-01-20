@@ -85,6 +85,6 @@ public class CameraController : MonoBehaviour
             currentCameraBackwardsOffset = Mathf.Lerp(currentCameraBackwardsOffset, baseCameraBackwardsOffset, Time.deltaTime * 3f);
         }
 
-        transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y, currentCameraBackwardsOffset);
+        //transform.localPosition = new Vector3(transform.localPosition.x, transform.localPosition.y, currentCameraBackwardsOffset);
     }
 }

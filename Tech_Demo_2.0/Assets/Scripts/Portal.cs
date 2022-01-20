@@ -16,26 +16,16 @@ public class Portal : MonoBehaviour
         get; private set;
     }
 
-    // Private fields. TODO can I change this to find all the values it needs through the script?
+    // Private fields.
     [SerializeField] private Portal destination;
     private Camera portalCamera;
-
     private RenderTexture screenRenderTexture;
-
-    [SerializeField] private GameObject player;
     private Camera mainCamera;
-
+    private PortalTraveler mainCameraTraveler;
+    private bool mainCameraInTravelers;
     private List<PortalTraveler> travelers = new List<PortalTraveler>();
     private Dictionary<PortalTraveler, Vector3> travelersStartPositions = new Dictionary<PortalTraveler, Vector3>();
 
-    /*
-    // Enums.
-    enum PortalSide
-    {
-        Positive,
-        Negative
-    }
-    */
 
     void Start()
     {
@@ -43,6 +33,8 @@ public class Portal : MonoBehaviour
         portalCamera = GetComponentInChildren<Camera>();
         portalCamera.enabled = false;
         mainCamera = Camera.main;
+        mainCameraTraveler = mainCamera.GetComponent<PortalTraveler>();
+        mainCamera.GetComponent<MainCameraController>().positionUpdated += OnMainCameraPositionUpdated;
         screenMeshRenderer.material.SetInt("displayMask", 1);
         // Portals start with being on and visible.
         isActivated = true;
@@ -51,6 +43,7 @@ public class Portal : MonoBehaviour
 
     private void Update()
     {
+
         // Press T to switch between portals being active or not.
         if (Input.GetKeyDown(KeyCode.T))
         {
@@ -121,8 +114,19 @@ public class Portal : MonoBehaviour
         }
     }
 
+    private void OnMainCameraPositionUpdated()
+    {
+        if (mainCameraInTravelers)
+        {
+            MoveTraveler(mainCameraTraveler);
+        }
+
+        ProtectScreenFromClipping();
+    }
+
     public void Render()
     {
+
         // Don't move the camera if the player doesn't see the portal screen.
         if (!VisibleFromCamera(destination.screenMeshRenderer, mainCamera))
         {
@@ -138,8 +142,6 @@ public class Portal : MonoBehaviour
         portalCamera.Render();
         destination.screenMeshRenderer.material.SetInt("displayMask", 1);
         screenMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-
-        ProtectScreenFromClipping(mainCamera.transform.position);
     }
 
     private void SetScreenRenderTexture()
@@ -166,7 +168,7 @@ public class Portal : MonoBehaviour
         portalCamera.transform.SetPositionAndRotation(playerCameraToPortal.GetColumn(3), playerCameraToPortal.rotation);
     }
 
-    // Copied from the code for Sebastians portal video.
+    // Copied from the code for Sebastians portal video. Checks if the portal is in the players view.
     public static bool VisibleFromCamera(Renderer renderer, Camera camera)
     {
         Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
@@ -210,6 +212,11 @@ public class Portal : MonoBehaviour
             travelers.Add(traveler);
             travelersStartPositions[traveler] = traveler.transform.position;
             traveler.EnterPortal();
+
+            if (traveler == mainCameraTraveler)
+            {
+                mainCameraInTravelers = true;
+            }
         }
     }
 
@@ -220,20 +227,16 @@ public class Portal : MonoBehaviour
             travelers.Remove(traveler);
             travelersStartPositions.Remove(traveler);
             traveler.ExitPortal();
+
+            if (traveler == mainCameraTraveler)
+            {
+                mainCameraInTravelers = false;
+            }
         }
-
-
-
-    }
-
-    private void TrackTravelers()
-    {
-
     }
 
     private void MoveTraveler(PortalTraveler traveler)
     {
-
         int travelerStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.right));
         int travelerCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
 
@@ -241,33 +244,49 @@ public class Portal : MonoBehaviour
 
         if (travelerStartPortalSide != travelerCurrentPortalSide)
         {
+            RemoveTraveler(traveler);
             traveler.Travel(cameraMatrix.GetColumn(3), cameraMatrix.rotation);
 
             destination.AddTraveler(traveler);
-            RemoveTraveler(traveler);
+
         }
     }
 
-    /*
-    private PortalSide CalculatePortalSide(Vector3 travelerPosition)
+    // TODO make the screen not clip.
+    private void ProtectScreenFromClipping()
     {
-        PortalSide travelerSideOfPortal;
-        Vector3 travelerOffsetFromPortal = travelerPosition - transform.position;
+        float halfHeight = mainCamera.nearClipPlane * Mathf.Tan(mainCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
+        float halfWidth = halfHeight * mainCamera.aspect;
+        float dstToNearClipPlaneCorner = new Vector3(halfWidth, halfHeight, mainCamera.nearClipPlane).magnitude;
+        float screenThickness = dstToNearClipPlaneCorner * 2f;
 
-        float portalSide = Vector3.Dot(travelerOffsetFromPortal, Vector3.forward);
-        if (portalSide > 0)
+        Transform screenT = screenMeshRenderer.transform;
+        bool camFacingSameDirAsPortal = Vector3.Dot(transform.right, transform.position - mainCamera.transform.position) > 0;
+        screenT.localScale = new Vector3(screenThickness, screenT.localScale.y, screenT.localScale.z);
+        screenT.localPosition = Vector3.right * screenThickness * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
+
+
+    }
+
+    private void SetNearClipPlane()
+    {
+        Transform clipPlane = screenMeshRenderer.transform;
+        int dot = Math.Sign(Vector3.Dot(clipPlane.right, screenMeshRenderer.transform.position - portalCamera.transform.position));
+
+        Vector3 camSpacePos = portalCamera.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
+        Vector3 camSpaceNormal = portalCamera.worldToCameraMatrix.MultiplyVector(clipPlane.right) * dot;
+        float camSpaceDst = -Vector3.Dot(camSpacePos, camSpaceNormal) + 0.05f;
+
+        if (Mathf.Abs(camSpaceDst) > 0.2f)
         {
-            travelerSideOfPortal = PortalSide.Positive;
+            Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDst);
+            portalCamera.projectionMatrix = mainCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
         }
         else
         {
-            travelerSideOfPortal = PortalSide.Negative;
+            portalCamera.projectionMatrix = mainCamera.projectionMatrix;
         }
-
-        return travelerSideOfPortal;
     }
-    */
-
     private void OnDrawGizmos()
     {
         if (!Application.isPlaying) return;
@@ -331,41 +350,5 @@ public class Portal : MonoBehaviour
 
         }
 
-    }
-
-    private void SetNearClipPlane()
-    {
-        Transform clipPlane = screenMeshRenderer.transform;
-        int dot = Math.Sign(Vector3.Dot(clipPlane.right, screenMeshRenderer.transform.position - portalCamera.transform.position));
-
-        Vector3 camSpacePos = portalCamera.worldToCameraMatrix.MultiplyPoint(clipPlane.position);
-        Vector3 camSpaceNormal = portalCamera.worldToCameraMatrix.MultiplyVector(clipPlane.right) * dot;
-        float camSpaceDst = -Vector3.Dot(camSpacePos, camSpaceNormal) + 0.05f;
-
-        if (Mathf.Abs(camSpaceDst) > 0.2f)
-        {
-            Vector4 clipPlaneCameraSpace = new Vector4(camSpaceNormal.x, camSpaceNormal.y, camSpaceNormal.z, camSpaceDst);
-            portalCamera.projectionMatrix = mainCamera.CalculateObliqueMatrix(clipPlaneCameraSpace);
-        }
-        else
-        {
-            portalCamera.projectionMatrix = mainCamera.projectionMatrix;
-        }
-    }
-
-
-    // TODO make the screen not clip.
-    float ProtectScreenFromClipping(Vector3 viewPoint)
-    {
-        float halfHeight = mainCamera.nearClipPlane * Mathf.Tan(mainCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
-        float halfWidth = halfHeight * mainCamera.aspect;
-        float dstToNearClipPlaneCorner = new Vector3(halfWidth, halfHeight, mainCamera.nearClipPlane).magnitude;
-        float screenThickness = dstToNearClipPlaneCorner;
-
-        Transform screenT = screenMeshRenderer.transform;
-        bool camFacingSameDirAsPortal = Vector3.Dot(transform.right, transform.position - mainCamera.transform.position) > 0;
-        screenT.localScale = new Vector3(screenThickness, screenT.localScale.y, screenT.localScale.z);
-        screenT.localPosition = Vector3.right * screenThickness * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
-        return screenThickness;
     }
 }

@@ -2017,6 +2017,22 @@ PrefabInstance:
       propertyPath: destination
       value: 
       objectReference: {fileID: 1068114745}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 541632595}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ResetPosition
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainCameraController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 7858784660219402568, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
       propertyPath: m_Name
       value: Portal (1)
@@ -2895,7 +2911,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 0.1
   far clip plane: 1000
   field of view: 50
   orthographic: 0
@@ -5189,7 +5205,7 @@ GameObject:
   - component: {fileID: 880599156}
   - component: {fileID: 880599155}
   m_Layer: 3
-  m_Name: post
+  m_Name: PostProcessing
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6921,6 +6937,22 @@ PrefabInstance:
       propertyPath: destination
       value: 
       objectReference: {fileID: 742045841}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 541632595}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ResetPosition
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainCameraController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 7858784660219402568, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
       propertyPath: m_Name
       value: Portal
@@ -10798,13 +10830,13 @@ GameObject:
   m_Component:
   - component: {fileID: 1695305680}
   - component: {fileID: 1695305679}
-  m_Layer: 8
-  m_Name: PostProcessing
+  m_Layer: 3
+  m_Name: PostProcessing example
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1695305679
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13179,6 +13211,22 @@ PrefabInstance:
       propertyPath: destination
       value: 
       objectReference: {fileID: 1914845654}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 541632595}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ResetPosition
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainCameraController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 7858784659442960766, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
       propertyPath: m_Depth
       value: -10
@@ -13242,6 +13290,10 @@ PrefabInstance:
     - target: {fileID: 7858784660747950774, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
       propertyPath: m_CastShadows
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8098597973783958191, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: m_RootOrder
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
@@ -13429,6 +13481,22 @@ PrefabInstance:
       propertyPath: destination
       value: 
       objectReference: {fileID: 2000630026}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 541632595}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: ResetPosition
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: MainCameraController, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4643968236677189293, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: exitPortal.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
     - target: {fileID: 6550216882680893209, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
       propertyPath: m_Mesh
       value: 
@@ -13492,6 +13560,10 @@ PrefabInstance:
     - target: {fileID: 7858784660219402573, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8098597973783958191, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
+      propertyPath: m_RootOrder
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 15511044e6ebde14f9a9653e3ceedee3, type: 3}
