@@ -29,7 +29,7 @@ public class CameraController : MonoBehaviour
         yRotation = transform.eulerAngles.y;
         xRotation = transform.eulerAngles.x;
 
-        Debug.Log(gameObject.transform.GetChild(0).name);
+        //Debug.Log(gameObject.transform.GetChild(0).name);
         cameraOffset = gameObject.transform.GetChild(0).localPosition;
         baseCameraBackwardsOffset = transform.localPosition.z;
         desiredCameraBackwardsOffset = -(cameraOffset.z / 2);
@@ -68,12 +68,12 @@ public class CameraController : MonoBehaviour
 
         RaycastHit hit;
         Vector3 rayStart = new Vector3(player.transform.position.x, player.transform.position.y + 1, player.transform.position.z);
-        Debug.DrawRay(rayStart, player.transform.forward * 10, Color.red, 1);
+        // Debug.DrawRay(rayStart, player.transform.forward * 10, Color.red, 1);
         Physics.Raycast(rayStart, player.transform.forward, out hit);
 
         if (hit.collider && hit.transform.CompareTag("Portal"))
         {
-            Debug.Log(hit.distance);
+            // Debug.Log(hit.distance);
 
             if (hit.distance < 5f)
             {

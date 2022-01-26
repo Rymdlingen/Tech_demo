@@ -504,6 +504,10 @@ PrefabInstance:
       value: cooking_place_twigs
       objectReference: {fileID: 0}
     - target: {fileID: 2382618376107964770, guid: f2237c6d3492c7d4497cf989fae4a7a0, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2382618376107964770, guid: f2237c6d3492c7d4497cf989fae4a7a0, type: 3}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}

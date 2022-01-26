@@ -13,7 +13,7 @@ public class PortalTraveler : MonoBehaviour
 
     public Portal lastUsedPortal { get; private set; }
 
-    public event Action<PortalTraveler, Portal, Portal> traveled;
+    public event Action<PortalTraveler> traveled;
 
     // Start is called before the first frame update
     protected virtual void Start()
@@ -67,10 +67,13 @@ public class PortalTraveler : MonoBehaviour
     {
         lastUsedPortal = traveledFrom;
 
+
         transform.position = toPosition;
         transform.rotation = newRotation;
 
-        traveled?.Invoke(this, traveledFrom, traveledTo);
+        Debug.Log("Travelers new position: " + transform.position);
+
+        traveled?.Invoke(this);
     }
 
     /*

@@ -9,38 +9,84 @@ public class MainCameraController : MonoBehaviour
 
     public event Action positionUpdated;
 
-    private Vector3 unforcedPosition;
-    private Vector3 forcedPositionDelta;
+    [SerializeField] private Vector3 playerCameraPosition;
+    [SerializeField] private Vector3 unforcedPosition;
+    [SerializeField] private Vector3 forcedPositionDelta;
 
     private Vector3 unforcedRotation;
 
-    public bool inForcingState = false;
-    private const float forcingRegionSize = 9;
-    private const float minTeleportationDistance = 15;
+    private bool inForcingState = false;
 
-    public float forcingFactor;
-    public float distanceFromPortal;
-    public bool playerHasTeleported;
-    public Vector3 forcedPosition;
-    public Vector3 cameraDirection;
+    // public float forcingFactor;
+    // public float distanceFromPortal;
+    // public bool playerHasTeleported;
+    [SerializeField] private Vector3 forcedPosition;
+    // public Vector3 cameraDirection;
 
-    private Portal forcingPortal;
+    [SerializeField] private Vector3 cameraToPlayerInCameraSpace;
+    [SerializeField] private Vector3 rayStart;
+
+
 
 
     // Start is called before the first frame update
     void Start()
     {
+
         target.trackingUpdated += OnTargetTrackingUpdated;
         GetComponent<PortalTraveler>().traveled += OnTraveled;
 
         unforcedPosition = transform.position;
         unforcedRotation = transform.rotation.eulerAngles;
+
+        Vector3 cameraToPlayerInWorldSpace = target.transform.position - transform.position;
+        cameraToPlayerInCameraSpace = transform.worldToLocalMatrix.MultiplyVector(cameraToPlayerInWorldSpace);
+    }
+
+    private void Update()
+    {
+
+
     }
 
     private void OnTargetTrackingUpdated()
     {
-        transform.Translate(target.travelerPositionDelta);
+
+        playerCameraPosition = target.trackingTarget.transform.position;
+        RaycastHit hit;
+        rayStart = unforcedPosition + transform.localToWorldMatrix.MultiplyVector(cameraToPlayerInCameraSpace);
+        // rayStart = unforcedPosition + (transform.right * directionFromCameraToPlayer.x + transform.up * directionFromCameraToPlayer.y + transform.forward * directionFromCameraToPlayer.z);
+        Debug.DrawRay(rayStart, unforcedPosition - rayStart, Color.red);
+        string[] layerNames = new string[] { "Environment", "Terrain" };
+        LayerMask environmentLayerMask = LayerMask.GetMask(layerNames);
+
+
+        if (Physics.Raycast(rayStart, unforcedPosition - rayStart, out hit, Vector3.Distance(target.transform.position, unforcedPosition), environmentLayerMask))
+        {
+            Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer));
+            forcedPosition = hit.point;
+            forcedPositionDelta = hit.point - unforcedPosition;
+            transform.position = forcedPosition;
+            // Move camera
+            Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
+            unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
+        }
+        else
+        {
+
+            transform.position = unforcedPosition;
+
+
+            transform.Translate(target.travelerPositionDelta);
+            unforcedPosition = transform.position;
+        }
+
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + target.travelerRotationDelta);
+
+
+
+
+        unforcedRotation = transform.rotation.eulerAngles;
 
         positionUpdated?.Invoke();
     }
@@ -107,11 +153,11 @@ public class MainCameraController : MonoBehaviour
         }
     */
 
-    private void OnTraveled(PortalTraveler traveler, Portal traveledFrom, Portal traveledTo)
+    private void OnTraveled(PortalTraveler traveler)
     {
-        forcingPortal = traveledTo;
         inForcingState = true;
-        unforcedPosition = transform.position - forcedPositionDelta;
+        unforcedPosition = transform.position;
+        forcedPosition = unforcedPosition;
         positionUpdated?.Invoke();
     }
 
@@ -126,8 +172,8 @@ public class MainCameraController : MonoBehaviour
         if (!Application.isPlaying) return;
 
         Gizmos.color = Color.cyan;
-        Gizmos.DrawCube(forcedPosition, Vector3.one);
-        Gizmos.DrawLine(forcedPosition, forcedPosition + cameraDirection);
+        Gizmos.DrawCube(unforcedPosition, Vector3.one);
+        // Gizmos.DrawLine(forcedPosition, forcedPosition + cameraDirection);
     }
 }
 

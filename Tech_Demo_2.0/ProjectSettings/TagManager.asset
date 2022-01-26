@@ -6,6 +6,7 @@ TagManager:
   tags:
   - Terrain
   - Portal
+  - Environment
   layers:
   - Default
   - TransparentFX
@@ -14,9 +15,9 @@ TagManager:
   - Water
   - UI
   - Player
-  - 
-  - 
-  - 
+  - Environment
+  - Portal
+  - Terrain
   - 
   - 
   - 

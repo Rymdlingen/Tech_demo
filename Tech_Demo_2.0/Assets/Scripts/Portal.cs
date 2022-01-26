@@ -240,12 +240,14 @@ public class Portal : MonoBehaviour
         int travelerStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.right));
         int travelerCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
 
-        Matrix4x4 cameraMatrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+        Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
 
         if (travelerStartPortalSide != travelerCurrentPortalSide)
         {
             RemoveTraveler(traveler);
-            traveler.Travel(cameraMatrix.GetColumn(3), cameraMatrix.rotation, this, destination);
+            traveler.Travel(matrix.GetColumn(3), matrix.rotation, this, destination);
+
+            Debug.Log("Travel to from matrix: " + matrix.GetColumn(3));
 
             destination.AddTraveler(traveler);
 
@@ -289,6 +291,7 @@ public class Portal : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
+        /*
         if (!Application.isPlaying) return;
 
         Matrix4x4 playerCameraToPortal = transform.localToWorldMatrix * destination.transform.worldToLocalMatrix * mainCamera.transform.localToWorldMatrix;
@@ -304,6 +307,7 @@ public class Portal : MonoBehaviour
         Gizmos.matrix = Matrix4x4.TRS(destination.portalCamera.transform.position, destination.portalCamera.transform.rotation, Vector3.one);
 
         Gizmos.DrawFrustum(Vector3.zero, destination.portalCamera.fieldOfView, destination.portalCamera.farClipPlane, destination.portalCamera.nearClipPlane, destination.portalCamera.aspect);
+        */
     }
 
     void UpdateSliceParams(PortalTraveler traveler)
