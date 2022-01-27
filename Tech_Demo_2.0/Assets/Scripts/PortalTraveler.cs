@@ -71,8 +71,6 @@ public class PortalTraveler : MonoBehaviour
         transform.position = toPosition;
         transform.rotation = newRotation;
 
-        Debug.Log("Travelers new position: " + transform.position);
-
         traveled?.Invoke(this);
     }
 

@@ -247,8 +247,6 @@ public class Portal : MonoBehaviour
             RemoveTraveler(traveler);
             traveler.Travel(matrix.GetColumn(3), matrix.rotation, this, destination);
 
-            Debug.Log("Travel to from matrix: " + matrix.GetColumn(3));
-
             destination.AddTraveler(traveler);
 
         }

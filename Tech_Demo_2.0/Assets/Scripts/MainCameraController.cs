@@ -14,7 +14,7 @@ public class MainCameraController : MonoBehaviour
 
     private Vector3 unforcedRotation;
 
-    // private bool inForcingState = false;
+    private bool inForcingState = false;
 
     // public float forcingFactor;
     // public float distanceFromPortal;
@@ -24,6 +24,8 @@ public class MainCameraController : MonoBehaviour
 
     [SerializeField] private Vector3 cameraToPlayerInCameraSpace;
     [SerializeField] private Vector3 rayStart;
+
+    [SerializeField] private float cameraBuffer;
 
 
 
@@ -43,22 +45,52 @@ public class MainCameraController : MonoBehaviour
 
     private void OnTargetTrackingUpdated()
     {
-        RaycastHit hit;
-        rayStart = unforcedPosition + transform.localToWorldMatrix.MultiplyVector(cameraToPlayerInCameraSpace);
-        // rayStart = unforcedPosition + (transform.right * directionFromCameraToPlayer.x + transform.up * directionFromCameraToPlayer.y + transform.forward * directionFromCameraToPlayer.z);
-        Debug.DrawRay(rayStart, unforcedPosition - rayStart, Color.red);
-        string[] layerNames = new string[] { "Environment", "Terrain" };
+
+
+        string[] layerNames = new string[] { "Environment", "Terrain", "Portal Frame" };
         LayerMask environmentLayerMask = LayerMask.GetMask(layerNames);
         LayerMask envirnomentLayer = LayerMask.NameToLayer(layerNames[0]);
+        LayerMask portalFrameLayer = LayerMask.NameToLayer(layerNames[2]);
 
-        if (Physics.Raycast(rayStart, unforcedPosition - rayStart, out hit, Vector3.Distance(target.transform.position, unforcedPosition), environmentLayerMask))
+        // TODO LERP
+
+        // All rays.
+        RaycastHit hit;
+        rayStart = unforcedPosition + transform.localToWorldMatrix.MultiplyVector(cameraToPlayerInCameraSpace);
+        // Main ray.
+        Vector3 rayDirection = unforcedPosition - rayStart;
+        Debug.DrawRay(rayStart, rayDirection, Color.green);
+        // Ray to the left.
+        Vector3 rayToTheLeft = rayDirection - Camera.main.nearClipPlane * transform.right;
+        Debug.DrawRay(rayStart, rayToTheLeft, Color.red);
+        // Ray to the right.
+        Vector3 rayToTheRight = rayDirection + Camera.main.nearClipPlane * transform.right;
+        Debug.DrawRay(rayStart, rayToTheRight, Color.blue);
+
+
+        if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask))
         {
+            // If the hit is a portal, make sure tha camera moves inside the portal frame.
+            if (hit.collider.gameObject.layer == portalFrameLayer)
+            {
+                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+                forcedPosition = hit.point + cameraBuffer * transform.forward;
+                forcedPositionDelta = hit.point - unforcedPosition;
+                //transform.position = forcedPosition;
+                transform.position = Vector3.Lerp(transform.position, forcedPosition, .05f);
+                // Move camera
+                Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
+                unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
+                inForcingState = true;
+
+            }
             // If the hit is environment, make it seethrough.
-            if (hit.collider.gameObject.layer == envirnomentLayer)
+            else if (hit.collider.gameObject.layer == envirnomentLayer && false)
             {
                 Material[] materials = hit.collider.gameObject.GetComponent<MeshRenderer>().materials;
                 foreach (Material material in materials)
                 {
+                    // TODO find a way to make it transparent.
                     Color seethroughColor = new Color(material.color.r, material.color.g, material.color.b, 0.5f);
                     material.color = seethroughColor;
                 }
@@ -67,32 +99,36 @@ public class MainCameraController : MonoBehaviour
                 transform.Translate(target.travelerPositionDelta);
                 unforcedPosition = transform.position;
             }
-            // If the hit is a portal, make sure tha camera moves inside the portal frame.
+            // If a hit is terrain or building, I don't know what to do really. MAKE A DECISION TODO
             else
             {
-
-                // If a hit is terrain or building, I don't know what to do really. MAKE A DECISION TODO
-                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer));
-                forcedPosition = hit.point;
+                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+                forcedPosition = hit.point + cameraBuffer * transform.forward;
                 forcedPositionDelta = hit.point - unforcedPosition;
-                transform.position = forcedPosition;
+                //transform.position = forcedPosition;
+                transform.position = Vector3.Lerp(transform.position, forcedPosition, .05f);
                 // Move camera
                 Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
                 unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
 
+                inForcingState = true;
             }
         }
         else
         {
-            if (transform.position != unforcedPosition) transform.position = unforcedPosition;
+            inForcingState = false;
+            if (transform.position != unforcedPosition)
+            {
+                // transform.position = unforcedPosition;
+                transform.position = Vector3.Lerp(transform.position, unforcedPosition, .05f);
+            }
             transform.Translate(target.travelerPositionDelta);
-            unforcedPosition = transform.position;
+            //unforcedPosition = transform.position;
+            Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
+            unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
         }
 
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + target.travelerRotationDelta);
-
-
-
 
         unforcedRotation = transform.rotation.eulerAngles;
 
@@ -163,9 +199,19 @@ public class MainCameraController : MonoBehaviour
 
     private void OnTraveled(PortalTraveler traveler)
     {
-        // inForcingState = true;
-        unforcedPosition = transform.position;
-        forcedPosition = unforcedPosition;
+        Debug.Log("OnTraveled from main camera script called");
+
+        if (inForcingState)
+        {
+            forcedPosition = transform.position;
+            unforcedPosition = target.trackingTarget.position;
+        }
+        else
+        {
+            unforcedPosition = transform.position;
+            forcedPosition = unforcedPosition;
+        }
+
         positionUpdated?.Invoke();
     }
 
