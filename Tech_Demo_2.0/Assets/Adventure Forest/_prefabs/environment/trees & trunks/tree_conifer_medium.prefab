@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8413825911865072132}
   - component: {fileID: 2882131678996342525}
   - component: {fileID: 4402194538797581300}
+  - component: {fileID: 7451994210911108510}
   m_Layer: 0
   m_Name: tree_conifer_medium
   m_TagString: Untagged
@@ -97,3 +98,17 @@ CapsuleCollider:
   m_Height: 2.9078593
   m_Direction: 1
   m_Center: {x: -0.033539772, y: 1.1876233, z: -0.005698979}
+--- !u!64 &7451994210911108510
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4594715543393014305}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 4
+  m_Convex: 1
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -7145142773807399546, guid: 0216e265b2ae3b7488a875ba8ec9509a, type: 3}

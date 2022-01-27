@@ -9,13 +9,12 @@ public class MainCameraController : MonoBehaviour
 
     public event Action positionUpdated;
 
-    [SerializeField] private Vector3 playerCameraPosition;
     [SerializeField] private Vector3 unforcedPosition;
     [SerializeField] private Vector3 forcedPositionDelta;
 
     private Vector3 unforcedRotation;
 
-    private bool inForcingState = false;
+    // private bool inForcingState = false;
 
     // public float forcingFactor;
     // public float distanceFromPortal;
@@ -32,7 +31,6 @@ public class MainCameraController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
         target.trackingUpdated += OnTargetTrackingUpdated;
         GetComponent<PortalTraveler>().traveled += OnTraveled;
 
@@ -43,40 +41,50 @@ public class MainCameraController : MonoBehaviour
         cameraToPlayerInCameraSpace = transform.worldToLocalMatrix.MultiplyVector(cameraToPlayerInWorldSpace);
     }
 
-    private void Update()
-    {
-
-
-    }
-
     private void OnTargetTrackingUpdated()
     {
-
-        playerCameraPosition = target.trackingTarget.transform.position;
         RaycastHit hit;
         rayStart = unforcedPosition + transform.localToWorldMatrix.MultiplyVector(cameraToPlayerInCameraSpace);
         // rayStart = unforcedPosition + (transform.right * directionFromCameraToPlayer.x + transform.up * directionFromCameraToPlayer.y + transform.forward * directionFromCameraToPlayer.z);
         Debug.DrawRay(rayStart, unforcedPosition - rayStart, Color.red);
         string[] layerNames = new string[] { "Environment", "Terrain" };
         LayerMask environmentLayerMask = LayerMask.GetMask(layerNames);
-
+        LayerMask envirnomentLayer = LayerMask.NameToLayer(layerNames[0]);
 
         if (Physics.Raycast(rayStart, unforcedPosition - rayStart, out hit, Vector3.Distance(target.transform.position, unforcedPosition), environmentLayerMask))
         {
-            Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer));
-            forcedPosition = hit.point;
-            forcedPositionDelta = hit.point - unforcedPosition;
-            transform.position = forcedPosition;
-            // Move camera
-            Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
-            unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
+            // If the hit is environment, make it seethrough.
+            if (hit.collider.gameObject.layer == envirnomentLayer)
+            {
+                Material[] materials = hit.collider.gameObject.GetComponent<MeshRenderer>().materials;
+                foreach (Material material in materials)
+                {
+                    Color seethroughColor = new Color(material.color.r, material.color.g, material.color.b, 0.5f);
+                    material.color = seethroughColor;
+                }
+
+                if (transform.position != unforcedPosition) transform.position = unforcedPosition;
+                transform.Translate(target.travelerPositionDelta);
+                unforcedPosition = transform.position;
+            }
+            // If the hit is a portal, make sure tha camera moves inside the portal frame.
+            else
+            {
+
+                // If a hit is terrain or building, I don't know what to do really. MAKE A DECISION TODO
+                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer));
+                forcedPosition = hit.point;
+                forcedPositionDelta = hit.point - unforcedPosition;
+                transform.position = forcedPosition;
+                // Move camera
+                Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
+                unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
+
+            }
         }
         else
         {
-
-            transform.position = unforcedPosition;
-
-
+            if (transform.position != unforcedPosition) transform.position = unforcedPosition;
             transform.Translate(target.travelerPositionDelta);
             unforcedPosition = transform.position;
         }
@@ -155,7 +163,7 @@ public class MainCameraController : MonoBehaviour
 
     private void OnTraveled(PortalTraveler traveler)
     {
-        inForcingState = true;
+        // inForcingState = true;
         unforcedPosition = transform.position;
         forcedPosition = unforcedPosition;
         positionUpdated?.Invoke();

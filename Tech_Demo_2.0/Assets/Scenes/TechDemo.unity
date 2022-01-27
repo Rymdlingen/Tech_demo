@@ -3230,7 +3230,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1140674300}
-  playerCameraPosition: {x: 0, y: 0, z: 0}
   unforcedPosition: {x: 0, y: 0, z: 0}
   forcedPositionDelta: {x: 0, y: 0, z: 0}
   forcedPosition: {x: 0, y: 0, z: 0}
@@ -3256,7 +3255,7 @@ SphereCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 541632590}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
@@ -4408,6 +4407,14 @@ PrefabInstance:
     - target: {fileID: 4594715543393014305, guid: e17d932c63c345141804e522d906f78a, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451994210911108510, guid: e17d932c63c345141804e522d906f78a, type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7451994210911108510, guid: e17d932c63c345141804e522d906f78a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: e17d932c63c345141804e522d906f78a, type: 3}
@@ -12975,6 +12982,10 @@ PrefabInstance:
     - target: {fileID: 2663734230498886606, guid: acfcda5ae311adf4299cbafb0becc3aa, type: 3}
       propertyPath: m_TagString
       value: Untagged
+      objectReference: {fileID: 0}
+    - target: {fileID: 6722699630260877902, guid: acfcda5ae311adf4299cbafb0becc3aa, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: acfcda5ae311adf4299cbafb0becc3aa, type: 3}
