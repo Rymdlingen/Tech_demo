@@ -32,7 +32,7 @@ public class MainCameraController : MonoBehaviour
     LayerMask envirnomentLayer;
     LayerMask portalFrameLayer;
 
-    List<GameObject> seethroughObjects = new List<GameObject>();
+    List<GameObject> transparentObjects = new List<GameObject>();
 
 
     // Start is called before the first frame update
@@ -54,8 +54,6 @@ public class MainCameraController : MonoBehaviour
 
     private void OnTargetTrackingUpdated()
     {
-        // TODO LERP
-
         // All rays.
         RaycastHit hit;
         rayStart = unforcedPosition + transform.localToWorldMatrix.MultiplyVector(cameraToPlayerInCameraSpace);
@@ -69,49 +67,57 @@ public class MainCameraController : MonoBehaviour
         Vector3 rayToTheRight = rayDirection + Camera.main.nearClipPlane * transform.right;
         Debug.DrawRay(rayStart, rayToTheRight, Color.blue);
 
-        var gameObjects = GetObstructingGameObjects(
+        #region Transparent objects
+
+        // Get a list of game objects that are between the player and the camera.
+        List<GameObject> obstructingObjects = GetObstructingGameObjects(
             new Ray(rayStart, rayDirection),
             new Ray(rayStart, rayToTheLeft),
             new Ray(rayStart, rayToTheLeft)
             );
 
-
-
         // Set obstructing environment to transparent.
-        foreach (var obstacle in gameObjects)
+        foreach (var obstacle in obstructingObjects)
         {
-            Debug.Log(obstacle.name);
-
-            if (!seethroughObjects.Contains(obstacle))
+            // If an object is not already in the transparent list, make it transparent and add it to the list.
+            if (!transparentObjects.Contains(obstacle))
             {
-                // TODO need to set it back to not transparent somehow
+                // Get all materials.
                 Material[] materials = obstacle.GetComponent<MeshRenderer>().materials;
                 foreach (Material material in materials)
                 {
-                    // TODO find a way to make it transparent.
-                    Color seethroughColor = new Color(material.color.r, material.color.g, material.color.b, 0.5f);
-                    material.color = seethroughColor;
+                    // Set color to transparent.
+                    Color transparentColor = new Color(material.color.r, material.color.g, material.color.b, 0.5f);
+                    material.color = transparentColor;
                 }
-                seethroughObjects.Add(obstacle);
+                // Add to list.
+                transparentObjects.Add(obstacle);
             }
         }
 
-        for (int i = 0; i < seethroughObjects.Count; i++)
+        // Change the transparent objects back if they are no longer obstructing.
+        for (int i = 0; i < transparentObjects.Count; i++)
         {
-            if (!gameObjects.Contains(seethroughObjects[i]))
+            // If an transparent object is not in the list of obstructing objects, make it fully visible and remove it from the transparent list.
+            if (!obstructingObjects.Contains(transparentObjects[i]))
             {
-                // TODO need to set it back to not transparent somehow
-                Material[] materials = seethroughObjects[i].GetComponent<MeshRenderer>().materials;
+                // Get all materials.
+                Material[] materials = transparentObjects[i].GetComponent<MeshRenderer>().materials;
                 foreach (Material material in materials)
                 {
-                    // TODO find a way to make it transparent.
-                    Color seethroughColor = new Color(material.color.r, material.color.g, material.color.b, 1f);
-                    material.color = seethroughColor;
+                    // Set color to fully visible.
+                    Color transparentColor = new Color(material.color.r, material.color.g, material.color.b, 1f);
+                    material.color = transparentColor;
                 }
-                seethroughObjects.Remove(seethroughObjects[i]);
+                // Remove from list.
+                transparentObjects.Remove(transparentObjects[i]);
                 i--;
             }
         }
+
+        #endregion
+
+        #region Move camera
 
         if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask))
         {
@@ -165,6 +171,8 @@ public class MainCameraController : MonoBehaviour
             Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
             unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
         }
+
+        #endregion
 
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + target.travelerRotationDelta);
 
