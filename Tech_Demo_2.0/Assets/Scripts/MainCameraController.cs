@@ -27,7 +27,12 @@ public class MainCameraController : MonoBehaviour
 
     [SerializeField] private float cameraBuffer;
 
+    string[] layerNames = new string[] { "Environment", "Terrain", "Portal Frame" };
+    LayerMask environmentLayerMask;
+    LayerMask envirnomentLayer;
+    LayerMask portalFrameLayer;
 
+    List<GameObject> seethroughObjects = new List<GameObject>();
 
 
     // Start is called before the first frame update
@@ -41,17 +46,14 @@ public class MainCameraController : MonoBehaviour
 
         Vector3 cameraToPlayerInWorldSpace = target.transform.position - transform.position;
         cameraToPlayerInCameraSpace = transform.worldToLocalMatrix.MultiplyVector(cameraToPlayerInWorldSpace);
+
+        environmentLayerMask = LayerMask.GetMask(layerNames);
+        envirnomentLayer = LayerMask.NameToLayer(layerNames[0]);
+        portalFrameLayer = LayerMask.NameToLayer(layerNames[2]);
     }
 
     private void OnTargetTrackingUpdated()
     {
-
-
-        string[] layerNames = new string[] { "Environment", "Terrain", "Portal Frame" };
-        LayerMask environmentLayerMask = LayerMask.GetMask(layerNames);
-        LayerMask envirnomentLayer = LayerMask.NameToLayer(layerNames[0]);
-        LayerMask portalFrameLayer = LayerMask.NameToLayer(layerNames[2]);
-
         // TODO LERP
 
         // All rays.
@@ -67,6 +69,49 @@ public class MainCameraController : MonoBehaviour
         Vector3 rayToTheRight = rayDirection + Camera.main.nearClipPlane * transform.right;
         Debug.DrawRay(rayStart, rayToTheRight, Color.blue);
 
+        var gameObjects = GetObstructingGameObjects(
+            new Ray(rayStart, rayDirection),
+            new Ray(rayStart, rayToTheLeft),
+            new Ray(rayStart, rayToTheLeft)
+            );
+
+
+
+        // Set obstructing environment to transparent.
+        foreach (var obstacle in gameObjects)
+        {
+            Debug.Log(obstacle.name);
+
+            if (!seethroughObjects.Contains(obstacle))
+            {
+                // TODO need to set it back to not transparent somehow
+                Material[] materials = obstacle.GetComponent<MeshRenderer>().materials;
+                foreach (Material material in materials)
+                {
+                    // TODO find a way to make it transparent.
+                    Color seethroughColor = new Color(material.color.r, material.color.g, material.color.b, 0.5f);
+                    material.color = seethroughColor;
+                }
+                seethroughObjects.Add(obstacle);
+            }
+        }
+
+        for (int i = 0; i < seethroughObjects.Count; i++)
+        {
+            if (!gameObjects.Contains(seethroughObjects[i]))
+            {
+                // TODO need to set it back to not transparent somehow
+                Material[] materials = seethroughObjects[i].GetComponent<MeshRenderer>().materials;
+                foreach (Material material in materials)
+                {
+                    // TODO find a way to make it transparent.
+                    Color seethroughColor = new Color(material.color.r, material.color.g, material.color.b, 1f);
+                    material.color = seethroughColor;
+                }
+                seethroughObjects.Remove(seethroughObjects[i]);
+                i--;
+            }
+        }
 
         if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask))
         {
@@ -78,23 +123,16 @@ public class MainCameraController : MonoBehaviour
                 forcedPositionDelta = hit.point - unforcedPosition;
                 //transform.position = forcedPosition;
                 transform.position = Vector3.Lerp(transform.position, forcedPosition, .05f);
-                // Move camera
+                // Update the unforced position.
                 Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
                 unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
+
                 inForcingState = true;
 
             }
             // If the hit is environment, make it seethrough.
-            else if (hit.collider.gameObject.layer == envirnomentLayer && false)
+            else if (hit.collider.gameObject.layer == envirnomentLayer)
             {
-                Material[] materials = hit.collider.gameObject.GetComponent<MeshRenderer>().materials;
-                foreach (Material material in materials)
-                {
-                    // TODO find a way to make it transparent.
-                    Color seethroughColor = new Color(material.color.r, material.color.g, material.color.b, 0.5f);
-                    material.color = seethroughColor;
-                }
-
                 if (transform.position != unforcedPosition) transform.position = unforcedPosition;
                 transform.Translate(target.travelerPositionDelta);
                 unforcedPosition = transform.position;
@@ -107,7 +145,7 @@ public class MainCameraController : MonoBehaviour
                 forcedPositionDelta = hit.point - unforcedPosition;
                 //transform.position = forcedPosition;
                 transform.position = Vector3.Lerp(transform.position, forcedPosition, .05f);
-                // Move camera
+                // Update the unforced position.
                 Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
                 unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
 
@@ -134,68 +172,24 @@ public class MainCameraController : MonoBehaviour
 
         positionUpdated?.Invoke();
     }
-    /*
-        private void OnTargetTrackingUpdated()
+
+    private List<GameObject> GetObstructingGameObjects(params Ray[] rays)
+    {
+        var gameObjects = new List<GameObject>();
+
+        foreach (var ray in rays)
         {
-            Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
-
-            unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
-            unforcedRotation += target.travelerRotationDelta;
-             playerHasTeleported = Vector3.Distance(transform.position, target.transform.position) > minTeleportationDistance;
-
-
-
-            if (!inForcingState && playerHasTeleported)
+            foreach (var hit in Physics.RaycastAll(ray, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask))
             {
-                inForcingState = true;
-                forcingPortal = target.lastUsedPortal;
-            }
-
-            if (inForcingState && false)
-            {
-                Transform portalTransform = forcingPortal.transform;
-
-                Vector3 unforcedPositionInPortalSpace = portalTransform.worldToLocalMatrix.MultiplyPoint(unforcedPosition);
-                Vector3 forcedPositionInPortalSpace = Vector3.Scale(unforcedPositionInPortalSpace, Vector3.right);
-
-
-                forcedPosition = portalTransform.localToWorldMatrix.MultiplyPoint(forcedPositionInPortalSpace);
-
-                cameraDirection = portalTransform.position - forcedPosition;
-
-                if (!playerHasTeleported)
+                if (!gameObjects.Contains(hit.transform.gameObject) && hit.transform.GetComponent<MeshRenderer>())
                 {
-                    Vector3 targetPositionInPortalSpace = portalTransform.worldToLocalMatrix.MultiplyPoint(target.transform.position);
-
-                    cameraDirection = portalTransform.localToWorldMatrix.MultiplyVector(targetPositionInPortalSpace - forcedPositionInPortalSpace);
-
-                    cameraDirection *= -1;
-                }
-
-                Vector3 forcedRotation = Quaternion.LookRotation(cameraDirection, Vector3.up).eulerAngles;
-
-                distanceFromPortal = Mathf.Abs(forcedPositionInPortalSpace.x);
-                forcingFactor = Mathf.Clamp01(1 - distanceFromPortal / forcingRegionSize);
-
-                transform.position = Vector3.Lerp(unforcedPosition, forcedPosition, forcingFactor);
-                transform.rotation = Quaternion.Lerp(Quaternion.Euler(unforcedRotation), Quaternion.Euler(forcedRotation), forcingFactor);
-
-                forcedPositionDelta = forcedPosition - unforcedPosition;
-
-                if (forcingFactor == 0)
-                {
-                    inForcingState = false;
+                    gameObjects.Add(hit.transform.gameObject);
                 }
             }
-            else
-            {
-            transform.position = unforcedPosition;
-            transform.rotation = Quaternion.Euler(unforcedRotation);
-            }
-
-            positionUpdated?.Invoke();
         }
-    */
+
+        return gameObjects;
+    }
 
     private void OnTraveled(PortalTraveler traveler)
     {
