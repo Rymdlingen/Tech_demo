@@ -5,6 +5,33 @@ using System;
 
 public class MainCameraController : MonoBehaviour
 {
+    public static void DebugSync(string message, bool always = false)
+    {
+        var mainCamera = Camera.main.gameObject.transform;
+        var playerCamera = GameObject.Find("Player Camera").transform;
+
+        if (mainCamera.GetComponent<PortalTraveler>().lastUsedPortal != null || always)
+        {
+            Debug.LogWarning(message);
+
+            Vector3 v = mainCamera.position;
+            Quaternion q = mainCamera.rotation;
+            Vector3 r = q.eulerAngles;
+
+            Debug.Log($"{v.x} {v.y} {v.z}");
+            Debug.Log($"{r.x} {r.y} {r.z}");
+            Debug.Log($"{q.x} {q.y} {q.z} {q.w}");
+
+            v = playerCamera.position;
+            q = playerCamera.rotation;
+            r = q.eulerAngles;
+
+            Debug.Log($"{v.x} {v.y} {v.z}");
+            Debug.Log($"{r.x} {r.y} {r.z}");
+            Debug.Log($"{q.x} {q.y} {q.z} {q.w}");
+        }
+    }
+
     [SerializeField] private TrackablePortalTraveler target;
 
     public event Action positionUpdated;
@@ -27,10 +54,10 @@ public class MainCameraController : MonoBehaviour
 
     [SerializeField] private float cameraBuffer;
 
-    string[] layerNames = new string[] { "Environment", "Terrain", "Portal Frame" };
-    LayerMask environmentLayerMask;
-    LayerMask envirnomentLayer;
-    LayerMask portalFrameLayer;
+    string[] layerNames = new string[] { "Big Environment Object", "Terrain", "Portal Frame" };
+    LayerMask environmentLayersMask;
+    LayerMask bigEnvirnomentObjectLayerMask;
+    LayerMask portalFrameLayerMask;
 
     List<GameObject> transparentObjects = new List<GameObject>();
 
@@ -41,15 +68,17 @@ public class MainCameraController : MonoBehaviour
         target.trackingUpdated += OnTargetTrackingUpdated;
         GetComponent<PortalTraveler>().traveled += OnTraveled;
 
+        transform.position = target.trackingTarget.transform.position;
+        transform.rotation = target.trackingTarget.transform.rotation;
         unforcedPosition = transform.position;
         unforcedRotation = transform.rotation.eulerAngles;
 
         Vector3 cameraToPlayerInWorldSpace = target.transform.position - transform.position;
         cameraToPlayerInCameraSpace = transform.worldToLocalMatrix.MultiplyVector(cameraToPlayerInWorldSpace);
 
-        environmentLayerMask = LayerMask.GetMask(layerNames);
-        envirnomentLayer = LayerMask.NameToLayer(layerNames[0]);
-        portalFrameLayer = LayerMask.NameToLayer(layerNames[2]);
+        environmentLayersMask = LayerMask.GetMask(layerNames);
+        bigEnvirnomentObjectLayerMask = LayerMask.NameToLayer(layerNames[0]);
+        portalFrameLayerMask = LayerMask.NameToLayer(layerNames[2]);
     }
 
     private void OnTargetTrackingUpdated()
@@ -119,10 +148,14 @@ public class MainCameraController : MonoBehaviour
 
         #region Move camera
 
-        if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask))
+        bool leftRaycastHit = Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
+        bool rightRaycastHit = Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
+        bool middleRaycastHit = Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
+
+        if (middleRaycastHit || rightRaycastHit || leftRaycastHit)
         {
             // If the hit is a portal, make sure tha camera moves inside the portal frame.
-            if (hit.collider.gameObject.layer == portalFrameLayer)
+            if (hit.collider.gameObject.layer == portalFrameLayerMask)
             {
                 Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
                 forcedPosition = hit.point + cameraBuffer * transform.forward;
@@ -137,7 +170,7 @@ public class MainCameraController : MonoBehaviour
 
             }
             // If the hit is environment, make it seethrough.
-            else if (hit.collider.gameObject.layer == envirnomentLayer)
+            else if (hit.collider.gameObject.layer == bigEnvirnomentObjectLayerMask)
             {
                 if (transform.position != unforcedPosition) transform.position = unforcedPosition;
                 transform.Translate(target.travelerPositionDelta);
@@ -163,19 +196,19 @@ public class MainCameraController : MonoBehaviour
             inForcingState = false;
             if (transform.position != unforcedPosition)
             {
-                // transform.position = unforcedPosition;
-                transform.position = Vector3.Lerp(transform.position, unforcedPosition, .05f);
+                transform.position = unforcedPosition;
+                // transform.position = Vector3.Lerp(transform.position, unforcedPosition, .05f);
             }
-            transform.Translate(target.travelerPositionDelta);
-            //unforcedPosition = transform.position;
+            // transform.Translate(target.travelerPositionDelta);
+
             Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
             unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
+            transform.position = unforcedPosition;
         }
 
         #endregion
 
         transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles + target.travelerRotationDelta);
-
         unforcedRotation = transform.rotation.eulerAngles;
 
         positionUpdated?.Invoke();
@@ -187,7 +220,7 @@ public class MainCameraController : MonoBehaviour
 
         foreach (var ray in rays)
         {
-            foreach (var hit in Physics.RaycastAll(ray, Vector3.Distance(rayStart, unforcedPosition), environmentLayerMask))
+            foreach (var hit in Physics.RaycastAll(ray, Vector3.Distance(rayStart, unforcedPosition), bigEnvirnomentObjectLayerMask))
             {
                 if (!gameObjects.Contains(hit.transform.gameObject) && hit.transform.GetComponent<MeshRenderer>())
                 {
@@ -201,17 +234,19 @@ public class MainCameraController : MonoBehaviour
 
     private void OnTraveled(PortalTraveler traveler)
     {
-        Debug.Log("OnTraveled from main camera script called");
-
         if (inForcingState)
         {
             forcedPosition = transform.position;
             unforcedPosition = target.trackingTarget.position;
+
+            unforcedRotation = transform.rotation.eulerAngles;
         }
         else
         {
             unforcedPosition = transform.position;
             forcedPosition = unforcedPosition;
+
+            unforcedRotation = transform.rotation.eulerAngles;
         }
 
         positionUpdated?.Invoke();

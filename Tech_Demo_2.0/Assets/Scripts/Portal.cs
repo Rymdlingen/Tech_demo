@@ -103,7 +103,7 @@ public class Portal : MonoBehaviour
                 for (int traveler = 0; traveler < travelers.Count; traveler++)
                 {
                     int totalTravelers = travelers.Count;
-                    MoveTraveler(travelers[traveler]);
+                    TrackTraveler(travelers[traveler]);
 
                     if (totalTravelers > travelers.Count)
                     {
@@ -118,7 +118,7 @@ public class Portal : MonoBehaviour
     {
         if (mainCameraInTravelers)
         {
-            MoveTraveler(mainCameraTraveler);
+            TrackTraveler(mainCameraTraveler);
         }
 
         ProtectScreenFromClipping();
@@ -235,20 +235,19 @@ public class Portal : MonoBehaviour
         }
     }
 
-    private void MoveTraveler(PortalTraveler traveler)
+    private void TrackTraveler(PortalTraveler traveler)
     {
         int travelerStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.right));
         int travelerCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
 
-        Matrix4x4 matrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
-
         if (travelerStartPortalSide != travelerCurrentPortalSide)
         {
             RemoveTraveler(traveler);
-            traveler.Travel(matrix.GetColumn(3), matrix.rotation, this, destination);
+
+            Matrix4x4 travelerLocalToDestinationWorldMatrix = destination.transform.localToWorldMatrix * transform.worldToLocalMatrix * traveler.transform.localToWorldMatrix;
+            traveler.Travel(travelerLocalToDestinationWorldMatrix.GetColumn(3), travelerLocalToDestinationWorldMatrix.rotation, this, destination);
 
             destination.AddTraveler(traveler);
-
         }
     }
 
@@ -264,8 +263,6 @@ public class Portal : MonoBehaviour
         bool camFacingSameDirAsPortal = Vector3.Dot(transform.right, transform.position - mainCamera.transform.position) > 0;
         screenT.localScale = new Vector3(screenThickness, screenT.localScale.y, screenT.localScale.z);
         screenT.localPosition = Vector3.right * screenThickness * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
-
-
     }
 
     private void SetNearClipPlane()

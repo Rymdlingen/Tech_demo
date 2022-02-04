@@ -15,7 +15,7 @@ TagManager:
   - Water
   - UI
   - Player
-  - Environment
+  - Big Environment Object
   - Portal
   - Terrain
   - Portal Frame
