@@ -152,6 +152,8 @@ public class MainCameraController : MonoBehaviour
         bool rightRaycastHit = Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
         bool middleRaycastHit = Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
 
+        // The hit is always set to the middle ray with means it is null if the camera is trying to change position if the other two rays are hitting. TODO
+
         if (middleRaycastHit || rightRaycastHit || leftRaycastHit)
         {
             // If the hit is a portal, make sure tha camera moves inside the portal frame.
