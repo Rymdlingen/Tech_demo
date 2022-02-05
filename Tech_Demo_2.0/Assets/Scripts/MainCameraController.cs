@@ -154,7 +154,7 @@ public class MainCameraController : MonoBehaviour
 
         // The hit is always set to the middle ray with means it is null if the camera is trying to change position if the other two rays are hitting. TODO
 
-        if (middleRaycastHit || rightRaycastHit || leftRaycastHit)
+        if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask))
         {
             // If the hit is a portal, make sure tha camera moves inside the portal frame.
             if (hit.collider.gameObject.layer == portalFrameLayerMask)
