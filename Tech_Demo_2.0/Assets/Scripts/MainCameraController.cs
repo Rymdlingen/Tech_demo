@@ -156,10 +156,12 @@ public class MainCameraController : MonoBehaviour
 
         if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask))
         {
+            Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+
             // If the hit is a portal, make sure tha camera moves inside the portal frame.
             if (hit.collider.gameObject.layer == portalFrameLayerMask)
             {
-                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+                // Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
                 forcedPosition = hit.point + cameraBuffer * transform.forward;
                 forcedPositionDelta = hit.point - unforcedPosition;
                 //transform.position = forcedPosition;
@@ -181,7 +183,7 @@ public class MainCameraController : MonoBehaviour
             // If a hit is terrain or building, I don't know what to do really. MAKE A DECISION TODO
             else
             {
-                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+                // Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
                 forcedPosition = hit.point + cameraBuffer * transform.forward;
                 forcedPositionDelta = hit.point - unforcedPosition;
                 //transform.position = forcedPosition;
@@ -222,9 +224,9 @@ public class MainCameraController : MonoBehaviour
 
         foreach (var ray in rays)
         {
-            foreach (var hit in Physics.RaycastAll(ray, Vector3.Distance(rayStart, unforcedPosition), bigEnvirnomentObjectLayerMask))
+            foreach (var hit in Physics.RaycastAll(ray, Vector3.Distance(rayStart, unforcedPosition)))
             {
-                if (!gameObjects.Contains(hit.transform.gameObject) && hit.transform.GetComponent<MeshRenderer>())
+                if (hit.transform.gameObject.layer == bigEnvirnomentObjectLayerMask && !gameObjects.Contains(hit.transform.gameObject) && hit.transform.GetComponent<MeshRenderer>())
                 {
                     gameObjects.Add(hit.transform.gameObject);
                 }
