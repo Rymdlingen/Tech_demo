@@ -17,19 +17,26 @@ public class CameraController : MonoBehaviour
     private float mouseXMovement;
     private float mouseYMovement;
 
+    private Vector3 focusPointYOffset;
+    private Vector3 cameraFocusPoint;
+    private Transform playerCameraTransform;
+
     // Start is called before the first frame update
     void Start()
     {
+        Camera.main.GetComponent<MainCameraController>().targetTraveled += RestrictCameraMovement;
+
         // Save the start value of the camera pivots x and y rotation. 
         yRotation = transform.eulerAngles.y;
         xRotation = transform.eulerAngles.x;
+
+        playerCameraTransform = GameObject.Find("Player Camera").transform;
+        focusPointYOffset = new Vector3(0, playerCameraTransform.localPosition.y, 0);
     }
 
     // Update is called once per frame
     void Update()
     {
-
-
         // Store mouse movement.
         mouseXMovement = Input.GetAxis("Mouse X");
         mouseYMovement = Input.GetAxis("Mouse Y");
@@ -52,5 +59,26 @@ public class CameraController : MonoBehaviour
             player.transform.rotation = Quaternion.Euler(0, yRotation, 0);
             transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         }
+    }
+
+    private void RestrictCameraMovement()
+    {
+        // raycast from focus point to camera
+        cameraFocusPoint = transform.position + focusPointYOffset;
+        LayerMask forcingFrameLayerMask = LayerMask.GetMask("Forcing Frame");
+        RaycastHit2D hit = Physics2D.Raycast(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint, Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), forcingFrameLayerMask);
+        //Physics.Raycast(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint, out hit, Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), forcingFrameLayerMask);
+        Debug.DrawRay(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint, Color.magenta);
+
+        Debug.Log(hit.collider.gameObject.name);
+
+
+        // if ray hits portal screen, all is good
+        // if it doesnt, restrict the camera
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawSphere(cameraFocusPoint, 0.2f);
     }
 }

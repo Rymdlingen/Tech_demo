@@ -237,8 +237,8 @@ public class Portal : MonoBehaviour
 
     private void TrackTraveler(PortalTraveler traveler)
     {
-        int travelerStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.right));
-        int travelerCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.right));
+        int travelerStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.forward));
+        int travelerCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.forward));
 
         if (travelerStartPortalSide != travelerCurrentPortalSide)
         {
@@ -260,9 +260,9 @@ public class Portal : MonoBehaviour
         float screenThickness = dstToNearClipPlaneCorner * 2f;
 
         Transform screenT = screenMeshRenderer.transform;
-        bool camFacingSameDirAsPortal = Vector3.Dot(transform.right, transform.position - mainCamera.transform.position) > 0;
+        bool camFacingSameDirAsPortal = Vector3.Dot(transform.forward, transform.position - mainCamera.transform.position) > 0;
         screenT.localScale = new Vector3(screenThickness, screenT.localScale.y, screenT.localScale.z);
-        screenT.localPosition = Vector3.right * screenThickness * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
+        screenT.localPosition = Vector3.forward * screenThickness * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
     }
 
     private void SetNearClipPlane()
@@ -309,8 +309,8 @@ public class Portal : MonoBehaviour
     {
         // Calculate slice normal
         int side = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.right));
-        Vector3 sliceNormal = transform.forward * -side;
-        Vector3 cloneSliceNormal = destination.transform.forward * side;
+        Vector3 sliceNormal = transform.right * -side;
+        Vector3 cloneSliceNormal = destination.transform.right * side;
 
         // Calculate slice centre
         Vector3 slicePos = transform.position;

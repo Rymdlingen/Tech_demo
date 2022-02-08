@@ -34,67 +34,79 @@ public class MainCameraController : MonoBehaviour
 
     [SerializeField] private TrackablePortalTraveler target;
 
+    // Sending events.
     public event Action positionUpdated;
+    public event Action targetTraveled;
 
+    // Used for cameras position and rotation.
     [SerializeField] private Vector3 unforcedPosition;
     [SerializeField] private Vector3 forcedPositionDelta;
-
     private Vector3 unforcedRotation;
-    private Vector3 forcedRotation;
-
-    private bool inForcingState = false;
-
     // public float forcingFactor;
     // public float distanceFromPortal;
     // public bool playerHasTeleported;
     [SerializeField] private Vector3 forcedPosition;
     // public Vector3 cameraDirection;
+    [SerializeField] private float cameraBuffer;
+    private bool inForcingState = false;
 
+    // Used for rays.
     [SerializeField] private Vector3 cameraToPlayerInCameraSpace;
     [SerializeField] private Vector3 rayStart;
 
-    [SerializeField] private float cameraBuffer;
-
+    // Layers.
     string[] layerNames = new string[] { "Big Environment Object", "Terrain", "Portal Frame" };
     LayerMask environmentLayersMask;
     LayerMask bigEnvirnomentObjectLayerMask;
     LayerMask portalFrameLayerMask;
+    LayerMask terrainLayerMask;
 
     List<GameObject> transparentObjects = new List<GameObject>();
-
 
     // Start is called before the first frame update
     void Start()
     {
+        // Subscribing to events.
         target.trackingUpdated += OnTargetTrackingUpdated;
         GetComponent<PortalTraveler>().traveled += OnTraveled;
 
+        // Set starting position and rotation relative to target.
         transform.position = target.trackingTarget.transform.position;
         transform.rotation = target.trackingTarget.transform.rotation;
         unforcedPosition = transform.position;
         unforcedRotation = transform.rotation.eulerAngles;
 
+        // Used to calculate the targets position in cameras local space.
         Vector3 cameraToPlayerInWorldSpace = target.transform.position - transform.position;
         cameraToPlayerInCameraSpace = transform.worldToLocalMatrix.MultiplyVector(cameraToPlayerInWorldSpace);
 
+        // Layer masks.
         environmentLayersMask = LayerMask.GetMask(layerNames);
         bigEnvirnomentObjectLayerMask = LayerMask.GetMask(layerNames[0]);
         portalFrameLayerMask = LayerMask.GetMask(layerNames[2]);
+        terrainLayerMask = LayerMask.GetMask(layerNames[1]);
+    }
+
+    private void Update()
+    {
+        if (Vector3.Distance(target.transform.position, transform.position) > cameraToPlayerInCameraSpace.magnitude + 1f)
+        {
+            targetTraveled.Invoke();
+        }
     }
 
     private void OnTargetTrackingUpdated()
     {
-        // All rays.
         RaycastHit hit;
         rayStart = unforcedPosition + transform.localToWorldMatrix.MultiplyVector(cameraToPlayerInCameraSpace);
-        // Main ray.
+
+        // All rays.
         Vector3 rayDirection = unforcedPosition - rayStart;
-        Debug.DrawRay(rayStart, rayDirection, Color.green);
-        // Ray to the left.
         Vector3 rayToTheLeft = rayDirection - Camera.main.nearClipPlane * 3 * transform.right;
-        Debug.DrawRay(rayStart, rayToTheLeft, Color.red);
-        // Ray to the right.
         Vector3 rayToTheRight = rayDirection + Camera.main.nearClipPlane * 3 * transform.right;
+
+        Debug.DrawRay(rayStart, rayDirection, Color.green);
+        Debug.DrawRay(rayStart, rayToTheLeft, Color.red);
         Debug.DrawRay(rayStart, rayToTheRight, Color.blue);
 
         #region Transparent objects
@@ -106,7 +118,7 @@ public class MainCameraController : MonoBehaviour
             new Ray(rayStart, rayToTheLeft)
             );
 
-        // Set obstructing environment to transparent.
+        // Set obstructing objects to transparent.
         foreach (var obstacle in obstructingObjects)
         {
             // If an object is not already in the transparent list, make it transparent and add it to the list.
@@ -155,14 +167,14 @@ public class MainCameraController : MonoBehaviour
 
         // The hit is always set to the middle ray with means it is null if the camera is trying to change position if the other two rays are hitting. TODO
 
-        if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask))
+        if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), terrainLayerMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), terrainLayerMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), terrainLayerMask))
         {
             // Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
 
             // If the hit is a portal, make sure tha camera moves inside the portal frame.
             if (LayerMask.GetMask(LayerMask.LayerToName(hit.collider.gameObject.layer)) == portalFrameLayerMask)
             {
-                // Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
                 forcedPosition = hit.point + cameraBuffer * transform.forward;
                 forcedPositionDelta = hit.point - unforcedPosition;
                 //transform.position = forcedPosition;
@@ -245,15 +257,6 @@ public class MainCameraController : MonoBehaviour
         }
 
         return gameObjects;
-    }
-
-    private void ForceThroughPortal()
-    {
-        // Raycast to find the area where camera can go
-
-        // Clamp the camera inside the raycasts
-
-
     }
 
     private void OnTraveled(PortalTraveler traveler)
