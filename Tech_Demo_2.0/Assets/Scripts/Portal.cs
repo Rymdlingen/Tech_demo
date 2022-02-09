@@ -17,7 +17,8 @@ public class Portal : MonoBehaviour
     }
 
     // Private fields.
-    [SerializeField] private Portal destination;
+    [SerializeField] private Portal Destination;
+    public Portal destination { get { return Destination; } private set { } }
     private Camera portalCamera;
     private RenderTexture screenRenderTexture;
     private Camera mainCamera;
@@ -291,7 +292,7 @@ public class Portal : MonoBehaviour
 
         Matrix4x4 playerCameraToPortal = transform.localToWorldMatrix * destination.transform.worldToLocalMatrix * mainCamera.transform.localToWorldMatrix;
 
-        Gizmos.color = new Color(0.0f, 0.0f, 0.75f, 0.75f);
+
 
         // Convert the local coordinate values into world
         // coordinates for the matrix transformation.
@@ -303,6 +304,20 @@ public class Portal : MonoBehaviour
 
         Gizmos.DrawFrustum(Vector3.zero, destination.portalCamera.fieldOfView, destination.portalCamera.farClipPlane, destination.portalCamera.nearClipPlane, destination.portalCamera.aspect);
         */
+
+        Gizmos.color = new Color(0.0f, 0.0f, 0.75f, 0.75f);
+
+        Vector2[] points = GetComponentInChildren<PolygonCollider2D>().points;
+
+        for (int i = 0; i < points.Length; i++)
+        {
+            Vector3 startPoint = transform.localToWorldMatrix.MultiplyPoint(points[i]);
+            Vector3 endPoint = transform.localToWorldMatrix.MultiplyPoint(points[(i + 1) % points.Length]);
+
+            Gizmos.DrawLine(startPoint, endPoint);
+        }
+
+
     }
 
     void UpdateSliceParams(PortalTraveler traveler)

@@ -21,6 +21,8 @@ public class CameraController : MonoBehaviour
     private Vector3 cameraFocusPoint;
     private Transform playerCameraTransform;
 
+    Vector3 hitPoint;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -66,19 +68,30 @@ public class CameraController : MonoBehaviour
         // raycast from focus point to camera
         cameraFocusPoint = transform.position + focusPointYOffset;
         LayerMask forcingFrameLayerMask = LayerMask.GetMask("Forcing Frame");
-        RaycastHit2D hit = Physics2D.Raycast(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint, Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), forcingFrameLayerMask);
-        //Physics.Raycast(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint, out hit, Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), forcingFrameLayerMask);
-        Debug.DrawRay(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint, Color.magenta);
 
-        Debug.Log(hit.collider.gameObject.name);
+        Transform thisPortalTransform = player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform;
+        Ray ray = new Ray(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint);
 
+        Debug.DrawRay(ray.origin, ray.direction * Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), Color.magenta);
+        Debug.Log("Ray start: " + ray.origin + " ray direction: " + ray.direction);
+
+        Plane xyPlane = new Plane(Vector3.forward, 0);
+
+        float distanceToPlane;
+        xyPlane.Raycast(ray, out distanceToPlane);
+        hitPoint = ray.origin + ray.direction * distanceToPlane;
 
         // if ray hits portal screen, all is good
+
+
+
         // if it doesnt, restrict the camera
     }
 
     private void OnDrawGizmos()
     {
+        Gizmos.color = Color.green;
         Gizmos.DrawSphere(cameraFocusPoint, 0.2f);
+        Gizmos.DrawSphere(hitPoint, 0.2f);
     }
 }
