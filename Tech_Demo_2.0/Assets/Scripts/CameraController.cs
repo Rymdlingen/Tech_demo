@@ -1,6 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class CameraController : MonoBehaviour
 {
@@ -22,6 +25,7 @@ public class CameraController : MonoBehaviour
     private Transform playerCameraTransform;
 
     Vector3 hitPoint;
+    Plane xyPlane;
 
     // Start is called before the first frame update
     void Start()
@@ -75,10 +79,11 @@ public class CameraController : MonoBehaviour
         Debug.DrawRay(ray.origin, ray.direction * Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), Color.magenta);
         Debug.Log("Ray start: " + ray.origin + " ray direction: " + ray.direction);
 
-        Plane xyPlane = new Plane(Vector3.forward, 0);
+        xyPlane = new Plane(Vector3.forward, 0); // why is this vector3 forward and not the local forward for the portal? TODO ask Matej
 
         float distanceToPlane;
-        xyPlane.Raycast(ray, out distanceToPlane);
+        Ray rayInPortalLocalSpace = new Ray(thisPortalTransform.worldToLocalMatrix.MultiplyPoint(ray.origin), thisPortalTransform.worldToLocalMatrix.MultiplyVector(ray.direction));
+        xyPlane.Raycast(rayInPortalLocalSpace, out distanceToPlane);
         hitPoint = ray.origin + ray.direction * distanceToPlane;
 
         // if ray hits portal screen, all is good
@@ -92,6 +97,13 @@ public class CameraController : MonoBehaviour
     {
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(cameraFocusPoint, 0.2f);
-        Gizmos.DrawSphere(hitPoint, 0.2f);
+        Gizmos.color = Color.red;
+        Gizmos.DrawCube(hitPoint, Vector3.one * 0.3f);
+#if UNITY_EDITOR
+        if (Application.isPlaying && xyPlane.normal != Vector3.zero)
+        {
+            Handles.DrawWireDisc(player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform.position, player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform.forward, 10f);
+        }
+#endif
     }
 }
