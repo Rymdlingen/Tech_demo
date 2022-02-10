@@ -24,13 +24,20 @@ public class CameraController : MonoBehaviour
     private Vector3 cameraFocusPoint;
     private Transform playerCameraTransform;
 
+    // Forcing the camera.
     Vector3 hitPoint;
+    Vector3 desiredHitPoint;
     Plane xyPlane;
+    PolygonCollider2D forcingFrame;
+    float saveZPosition;
+    Transform thisPortalTransform;
+    Vector3 localHitPoint;
+    Vector3 localDesiredHitPoint;
 
     // Start is called before the first frame update
     void Start()
     {
-        Camera.main.GetComponent<MainCameraController>().targetTraveled += RestrictCameraMovement;
+        // Camera.main.GetComponent<MainCameraController>().targetTraveled += RestrictCameraMovement;
 
         // Save the start value of the camera pivots x and y rotation. 
         yRotation = transform.eulerAngles.y;
@@ -62,8 +69,13 @@ public class CameraController : MonoBehaviour
         // Rotate the camera pivot around both y and x and rotate player around the y axis.
         if (mouseXMovement != 0 || mouseYMovement != 0)
         {
-            player.transform.rotation = Quaternion.Euler(0, yRotation, 0);
+            player.transform.localRotation = Quaternion.Euler(0, yRotation, 0);
             transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
+        }
+
+        if ((Camera.main.transform.position - transform.position).magnitude > 10)
+        {
+            RestrictCameraMovement();
         }
     }
 
@@ -73,11 +85,11 @@ public class CameraController : MonoBehaviour
         cameraFocusPoint = transform.position + focusPointYOffset;
         LayerMask forcingFrameLayerMask = LayerMask.GetMask("Forcing Frame");
 
-        Transform thisPortalTransform = player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform;
+        thisPortalTransform = player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform;
         Ray ray = new Ray(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint);
 
         Debug.DrawRay(ray.origin, ray.direction * Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), Color.magenta);
-        Debug.Log("Ray start: " + ray.origin + " ray direction: " + ray.direction);
+        // Debug.Log("Ray start: " + ray.origin + " ray direction: " + ray.direction);
 
         xyPlane = new Plane(Vector3.forward, 0); // why is this vector3 forward and not the local forward for the portal? TODO ask Matej
 
@@ -85,6 +97,37 @@ public class CameraController : MonoBehaviour
         Ray rayInPortalLocalSpace = new Ray(thisPortalTransform.worldToLocalMatrix.MultiplyPoint(ray.origin), thisPortalTransform.worldToLocalMatrix.MultiplyVector(ray.direction));
         xyPlane.Raycast(rayInPortalLocalSpace, out distanceToPlane);
         hitPoint = ray.origin + ray.direction * distanceToPlane;
+        localHitPoint = thisPortalTransform.worldToLocalMatrix.MultiplyPoint(hitPoint);
+        // saveZPosition = hitPoint.z;
+        // hitPoint = new Vector3(hitPoint.x, hitPoint.y, 0);
+
+        forcingFrame = thisPortalTransform.GetComponent<Portal>().forcingFrame;
+        Vector2 localHitPoint2D = localHitPoint;
+        Vector2 localDesiredHitPoint2D = forcingFrame.ClosestPoint(localHitPoint2D);
+        localDesiredHitPoint = localDesiredHitPoint2D;
+        desiredHitPoint = thisPortalTransform.localToWorldMatrix.MultiplyPoint(localDesiredHitPoint);
+        Debug.Log("Hit point: " + hitPoint + " in frame: " + desiredHitPoint);
+        Debug.Log("Local hit point: " + localHitPoint + " local in frame: " + localDesiredHitPoint);
+
+        if (localDesiredHitPoint != localHitPoint)
+        {
+            Vector3 desiredDirection = (desiredHitPoint - cameraFocusPoint).normalized;
+            Matrix4x4 lookAtMatrix = Matrix4x4.LookAt(Vector3.zero, -desiredDirection, Vector3.up);
+            Vector3 desiredEulerAngles = lookAtMatrix.rotation.eulerAngles;
+
+            yRotation = desiredEulerAngles.y;
+            //xRotation = desiredEulerAngles.x;
+
+            player.transform.localRotation = Quaternion.Euler(0, yRotation, 0);
+            //transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
+        }
+
+
+
+
+        // compare the directions and get the angles between points
+        // change pivot rotation by the difference angle
+
 
         // if ray hits portal screen, all is good
 
@@ -98,7 +141,10 @@ public class CameraController : MonoBehaviour
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(cameraFocusPoint, 0.2f);
         Gizmos.color = Color.red;
-        Gizmos.DrawCube(hitPoint, Vector3.one * 0.3f);
+        Gizmos.DrawCube(thisPortalTransform.localToWorldMatrix.MultiplyPoint(localHitPoint), Vector3.one * 0.3f);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawCube(thisPortalTransform.localToWorldMatrix.MultiplyPoint(localDesiredHitPoint), Vector3.one * 0.3f);
+
 #if UNITY_EDITOR
         if (Application.isPlaying && xyPlane.normal != Vector3.zero)
         {

@@ -91,7 +91,7 @@ public class MainCameraController : MonoBehaviour
     {
         if (Vector3.Distance(target.transform.position, transform.position) > cameraToPlayerInCameraSpace.magnitude + 1f)
         {
-            targetTraveled.Invoke();
+            targetTraveled?.Invoke();
         }
     }
 

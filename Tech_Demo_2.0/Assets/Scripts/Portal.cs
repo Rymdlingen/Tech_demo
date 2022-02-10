@@ -16,6 +16,11 @@ public class Portal : MonoBehaviour
         get; private set;
     }
 
+    public PolygonCollider2D forcingFrame
+    {
+        get; private set;
+    }
+
     // Private fields.
     [SerializeField] private Portal Destination;
     public Portal destination { get { return Destination; } private set { } }
@@ -40,6 +45,12 @@ public class Portal : MonoBehaviour
         // Portals start with being on and visible.
         isActivated = true;
         screenMeshRenderer.enabled = isActivated;
+
+        Transform forcingFrameTransform = transform.Find("Forcing Frame");
+        forcingFrame = forcingFrameTransform.GetComponent<PolygonCollider2D>();
+        forcingFrameTransform.SetParent(null);
+        forcingFrameTransform.position = Vector3.zero;
+        forcingFrameTransform.rotation = Quaternion.identity;
     }
 
     private void Update()
