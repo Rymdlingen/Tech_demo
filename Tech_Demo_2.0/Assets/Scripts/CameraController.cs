@@ -54,6 +54,7 @@ public class CameraController : MonoBehaviour
         mouseXMovement = Input.GetAxis("Mouse X");
         mouseYMovement = Input.GetAxis("Mouse Y");
         yRotation = transform.eulerAngles.y;
+        //xRotation = transform.eulerAngles.x;
         // Add the mouse x movement to the y rotation in the speed of horizontal camera movement.
         if (mouseXMovement != 0)
         {
@@ -63,7 +64,7 @@ public class CameraController : MonoBehaviour
         // Add the mouse y movement to the x rotation in the speed of vertical camera movement, but keep the value within the pitch restrictions.
         if (mouseYMovement != 0)
         {
-            xRotation = Mathf.Clamp(xRotation + mouseYMovement * cameraVerticalSpeed, minPitch, maxPitch);
+            xRotation = Mathf.Clamp(xRotation - mouseYMovement * cameraVerticalSpeed, minPitch, maxPitch);
         }
 
         // Rotate the camera pivot around both y and x and rotate player around the y axis.
@@ -86,6 +87,8 @@ public class CameraController : MonoBehaviour
         LayerMask forcingFrameLayerMask = LayerMask.GetMask("Forcing Frame");
 
         thisPortalTransform = player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform;
+        // Vector3 rayDirection = playerCameraTransform.position - cameraFocusPoint;
+        // rayDirection = new Vector3(Mathf.Abs(rayDirection.x), rayDirection.y, rayDirection.z);
         Ray ray = new Ray(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint);
 
         Debug.DrawRay(ray.origin, ray.direction * Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), Color.magenta);
@@ -98,16 +101,14 @@ public class CameraController : MonoBehaviour
         xyPlane.Raycast(rayInPortalLocalSpace, out distanceToPlane);
         hitPoint = ray.origin + ray.direction * distanceToPlane;
         localHitPoint = thisPortalTransform.worldToLocalMatrix.MultiplyPoint(hitPoint);
-        // saveZPosition = hitPoint.z;
-        // hitPoint = new Vector3(hitPoint.x, hitPoint.y, 0);
 
         forcingFrame = thisPortalTransform.GetComponent<Portal>().forcingFrame;
         Vector2 localHitPoint2D = localHitPoint;
         Vector2 localDesiredHitPoint2D = forcingFrame.ClosestPoint(localHitPoint2D);
         localDesiredHitPoint = localDesiredHitPoint2D;
         desiredHitPoint = thisPortalTransform.localToWorldMatrix.MultiplyPoint(localDesiredHitPoint);
-        Debug.Log("Hit point: " + hitPoint + " in frame: " + desiredHitPoint);
-        Debug.Log("Local hit point: " + localHitPoint + " local in frame: " + localDesiredHitPoint);
+        // Debug.Log("Hit point: " + hitPoint + " in frame: " + desiredHitPoint);
+        // Debug.Log("Local hit point: " + localHitPoint + " local in frame: " + localDesiredHitPoint);
 
         if (localDesiredHitPoint != localHitPoint)
         {
@@ -115,11 +116,14 @@ public class CameraController : MonoBehaviour
             Matrix4x4 lookAtMatrix = Matrix4x4.LookAt(Vector3.zero, -desiredDirection, Vector3.up);
             Vector3 desiredEulerAngles = lookAtMatrix.rotation.eulerAngles;
 
+
+
             yRotation = desiredEulerAngles.y;
-            //xRotation = desiredEulerAngles.x;
+            // Debug.Log(desiredEulerAngles.y);
+            xRotation = Mathf.Min(xRotation, desiredEulerAngles.x);
 
             player.transform.localRotation = Quaternion.Euler(0, yRotation, 0);
-            //transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
+            transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         }
 
 

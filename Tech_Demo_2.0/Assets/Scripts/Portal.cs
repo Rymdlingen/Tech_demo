@@ -48,7 +48,7 @@ public class Portal : MonoBehaviour
 
         Transform forcingFrameTransform = transform.Find("Forcing Frame");
         forcingFrame = forcingFrameTransform.GetComponent<PolygonCollider2D>();
-        forcingFrameTransform.SetParent(null);
+        forcingFrameTransform.SetParent(GameObject.Find("Forcing Frame Collection").transform);
         forcingFrameTransform.position = Vector3.zero;
         forcingFrameTransform.rotation = Quaternion.identity;
         forcingFrameTransform.localScale = transform.lossyScale;
@@ -274,8 +274,8 @@ public class Portal : MonoBehaviour
 
         Transform screenT = screenMeshRenderer.transform;
         bool camFacingSameDirAsPortal = Vector3.Dot(transform.forward, transform.position - mainCamera.transform.position) > 0;
-        screenT.localScale = new Vector3(screenThickness, screenT.localScale.y, screenT.localScale.z);
-        screenT.localPosition = Vector3.forward * screenThickness * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
+        screenT.localScale = new Vector3(screenThickness / transform.localScale.x, screenT.localScale.y, screenT.localScale.z);
+        screenT.localPosition = Vector3.forward * (screenThickness / transform.localScale.x) * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
     }
 
     private void SetNearClipPlane()
