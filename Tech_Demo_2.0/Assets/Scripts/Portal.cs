@@ -51,6 +51,7 @@ public class Portal : MonoBehaviour
         forcingFrameTransform.SetParent(null);
         forcingFrameTransform.position = Vector3.zero;
         forcingFrameTransform.rotation = Quaternion.identity;
+        forcingFrameTransform.localScale = transform.lossyScale;
     }
 
     private void Update()
@@ -298,8 +299,9 @@ public class Portal : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
+
         /*
-        if (!Application.isPlaying) return;
+
 
         Matrix4x4 playerCameraToPortal = transform.localToWorldMatrix * destination.transform.worldToLocalMatrix * mainCamera.transform.localToWorldMatrix;
 
@@ -316,9 +318,19 @@ public class Portal : MonoBehaviour
         Gizmos.DrawFrustum(Vector3.zero, destination.portalCamera.fieldOfView, destination.portalCamera.farClipPlane, destination.portalCamera.nearClipPlane, destination.portalCamera.aspect);
         */
 
+
         Gizmos.color = new Color(0.0f, 0.0f, 0.75f, 0.75f);
 
-        Vector2[] points = GetComponentInChildren<PolygonCollider2D>().points;
+        Vector2[] points;
+        if (!Application.isPlaying)
+        {
+            points = GetComponentInChildren<PolygonCollider2D>().points;
+        }
+        else
+        {
+            points = forcingFrame.points;
+        }
+
 
         for (int i = 0; i < points.Length; i++)
         {

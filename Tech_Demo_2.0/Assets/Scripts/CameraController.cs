@@ -140,11 +140,13 @@ public class CameraController : MonoBehaviour
     {
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(cameraFocusPoint, 0.2f);
-        Gizmos.color = Color.red;
-        Gizmos.DrawCube(thisPortalTransform.localToWorldMatrix.MultiplyPoint(localHitPoint), Vector3.one * 0.3f);
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawCube(thisPortalTransform.localToWorldMatrix.MultiplyPoint(localDesiredHitPoint), Vector3.one * 0.3f);
-
+        if (thisPortalTransform)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawCube(thisPortalTransform.localToWorldMatrix.MultiplyPoint(localHitPoint), Vector3.one * 0.3f);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawCube(thisPortalTransform.localToWorldMatrix.MultiplyPoint(localDesiredHitPoint), Vector3.one * 0.3f);
+        }
 #if UNITY_EDITOR
         if (Application.isPlaying && xyPlane.normal != Vector3.zero)
         {
