@@ -42,11 +42,7 @@ public class MainCameraController : MonoBehaviour
     [SerializeField] private Vector3 unforcedPosition;
     [SerializeField] private Vector3 forcedPositionDelta;
     private Vector3 unforcedRotation;
-    // public float forcingFactor;
-    // public float distanceFromPortal;
-    // public bool playerHasTeleported;
     [SerializeField] private Vector3 forcedPosition;
-    // public Vector3 cameraDirection;
     [SerializeField] private float cameraBuffer;
     private bool inForcingState = false;
 
@@ -92,6 +88,7 @@ public class MainCameraController : MonoBehaviour
         if (Vector3.Distance(target.transform.position, transform.position) > cameraToPlayerInCameraSpace.magnitude + 1f)
         {
             targetTraveled?.Invoke();
+
         }
     }
 
@@ -261,6 +258,8 @@ public class MainCameraController : MonoBehaviour
 
     private void OnTraveled(PortalTraveler traveler)
     {
+
+
         if (inForcingState)
         {
             forcedPosition = transform.position;

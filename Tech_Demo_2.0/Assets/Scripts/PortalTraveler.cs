@@ -60,6 +60,8 @@ public class PortalTraveler : MonoBehaviour
             return;
         }
 
+        ClearLastUsedPortal();
+
         cloneTraveler.SetActive(false);
     }
 
@@ -72,6 +74,11 @@ public class PortalTraveler : MonoBehaviour
         transform.rotation = newRotation;
 
         traveled?.Invoke(this);
+    }
+
+    public void ClearLastUsedPortal()
+    {
+        lastUsedPortal = null;
     }
 
     /*

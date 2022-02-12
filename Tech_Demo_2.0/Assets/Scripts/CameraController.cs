@@ -78,6 +78,13 @@ public class CameraController : MonoBehaviour
         {
             RestrictCameraMovement();
         }
+        else
+        {
+            if (thisPortalTransform != null)
+            {
+                thisPortalTransform = null;
+            }
+        }
     }
 
     private void RestrictCameraMovement()
@@ -86,7 +93,11 @@ public class CameraController : MonoBehaviour
         cameraFocusPoint = transform.position + focusPointYOffset;
         LayerMask forcingFrameLayerMask = LayerMask.GetMask("Forcing Frame");
 
-        thisPortalTransform = player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform;
+        // TODO choose either the characters or the players last used portal
+        if (thisPortalTransform == null)
+        {
+            thisPortalTransform = player.GetComponent<PortalTraveler>().lastUsedPortal ? player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform : Camera.main.GetComponent<PortalTraveler>().lastUsedPortal.transform;
+        }
         // Vector3 rayDirection = playerCameraTransform.position - cameraFocusPoint;
         // rayDirection = new Vector3(Mathf.Abs(rayDirection.x), rayDirection.y, rayDirection.z);
         Ray ray = new Ray(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint);
@@ -152,9 +163,9 @@ public class CameraController : MonoBehaviour
             Gizmos.DrawCube(thisPortalTransform.localToWorldMatrix.MultiplyPoint(localDesiredHitPoint), Vector3.one * 0.3f);
         }
 #if UNITY_EDITOR
-        if (Application.isPlaying && xyPlane.normal != Vector3.zero)
+        if (Application.isPlaying && xyPlane.normal != Vector3.zero && thisPortalTransform != null)
         {
-            Handles.DrawWireDisc(player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform.position, player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform.forward, 10f);
+            Handles.DrawWireDisc(thisPortalTransform.position, thisPortalTransform.forward, 10f);
         }
 #endif
     }
