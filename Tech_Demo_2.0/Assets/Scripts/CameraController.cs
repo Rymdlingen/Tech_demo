@@ -98,20 +98,33 @@ public class CameraController : MonoBehaviour
         {
             thisPortalTransform = player.GetComponent<PortalTraveler>().lastUsedPortal ? player.GetComponent<PortalTraveler>().lastUsedPortal.destination.transform : Camera.main.GetComponent<PortalTraveler>().lastUsedPortal.transform;
         }
-        // Vector3 rayDirection = playerCameraTransform.position - cameraFocusPoint;
-        // rayDirection = new Vector3(Mathf.Abs(rayDirection.x), rayDirection.y, rayDirection.z);
-        Ray ray = new Ray(cameraFocusPoint, playerCameraTransform.position - cameraFocusPoint);
+        Vector3 directionFromFocusToPlayerCamera = playerCameraTransform.position - cameraFocusPoint;
+        Ray ray = new Ray(cameraFocusPoint, directionFromFocusToPlayerCamera);
 
         Debug.DrawRay(ray.origin, ray.direction * Vector3.Distance(cameraFocusPoint, playerCameraTransform.position), Color.magenta);
         // Debug.Log("Ray start: " + ray.origin + " ray direction: " + ray.direction);
 
         xyPlane = new Plane(Vector3.forward, 0); // why is this vector3 forward and not the local forward for the portal? TODO ask Matej
+        // find out if player camera and player is on the same side of the destination portal,
+        // if so rotate it to hit the plane. But chanege tha ray and not the actuall position of the player camera
 
         float distanceToPlane;
         Ray rayInPortalLocalSpace = new Ray(thisPortalTransform.worldToLocalMatrix.MultiplyPoint(ray.origin), thisPortalTransform.worldToLocalMatrix.MultiplyVector(ray.direction));
-        xyPlane.Raycast(rayInPortalLocalSpace, out distanceToPlane);
-        hitPoint = ray.origin + ray.direction * distanceToPlane;
-        localHitPoint = thisPortalTransform.worldToLocalMatrix.MultiplyPoint(hitPoint);
+        bool didHitThePlane = xyPlane.Raycast(rayInPortalLocalSpace, out distanceToPlane);
+        if (didHitThePlane)
+        {
+            hitPoint = ray.origin + ray.direction * distanceToPlane;
+            localHitPoint = thisPortalTransform.worldToLocalMatrix.MultiplyPoint(hitPoint);
+        }
+        else
+        {
+            Vector3 localOrigin = thisPortalTransform.worldToLocalMatrix.MultiplyPoint(ray.origin);
+            Vector3 newLocalOrigin = new Vector3(localOrigin.x, localOrigin.y, -localOrigin.z);
+            rayInPortalLocalSpace = new Ray(newLocalOrigin, thisPortalTransform.worldToLocalMatrix.MultiplyVector(ray.direction));
+            xyPlane.Raycast(rayInPortalLocalSpace, out distanceToPlane);
+            hitPoint = ray.origin + ray.direction * distanceToPlane;
+            localHitPoint = thisPortalTransform.worldToLocalMatrix.MultiplyPoint(hitPoint);
+        }
 
         forcingFrame = thisPortalTransform.GetComponent<Portal>().forcingFrame;
         Vector2 localHitPoint2D = localHitPoint;
