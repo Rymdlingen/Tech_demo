@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class TrackablePortalTraveler : PortalTraveler
 {
+    #region Fields.
+
     [SerializeField] public Transform trackingTarget;
     public Vector3 previousTravelerPosition { get; private set; }
     public Matrix4x4 previousTravelerWorldToLocalMatrix { get; private set; }
@@ -18,6 +20,7 @@ public class TrackablePortalTraveler : PortalTraveler
 
     public event Action trackingUpdated;
 
+    #endregion
 
     // Start is called before the first frame update
     protected override void Start()
@@ -62,6 +65,7 @@ public class TrackablePortalTraveler : PortalTraveler
         previousTravelerRotation = latestTravelerRotation;
         latestTravelerRotation = trackingTarget.rotation.eulerAngles;
 
+        // Tell that the tracking have been updated.
         trackingUpdated?.Invoke();
     }
 }

@@ -2501,6 +2501,7 @@ MonoBehaviour:
   cameraVerticalSpeed: 0.7
   maxPitch: 70
   minPitch: -10
+  haveTraveledThreshold: 10
 --- !u!1 &444910237
 GameObject:
   m_ObjectHideFlags: 0
@@ -3255,12 +3256,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   target: {fileID: 1140674300}
-  unforcedPosition: {x: 0, y: 0, z: 0}
-  forcedPositionDelta: {x: 0, y: 0, z: 0}
-  forcedPosition: {x: 0, y: 0, z: 0}
   cameraBuffer: 1
-  cameraToPlayerInCameraSpace: {x: 0, y: 0, z: 0}
-  rayStart: {x: 0, y: 0, z: 0}
 --- !u!114 &541632596
 MonoBehaviour:
   m_ObjectHideFlags: 0

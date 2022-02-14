@@ -16,30 +16,21 @@ public class PortalTraveler : MonoBehaviour
     public event Action<PortalTraveler> traveled;
 
     // Start is called before the first frame update
-    protected virtual void Start()
+    protected virtual void Start() // Why is this protected? TODO
     {
+        // Used for cloning the traveler if they have a mesh.
         originalTraveler = gameObject.transform.GetComponentInChildren<MeshRenderer>()?.gameObject;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
-    }
-
-    private void FixedUpdate()
-    {
-
     }
 
     public virtual void EnterPortal()
     {
+        // If the traveler didn't have a mesh, do nothing.
         if (!originalTraveler)
         {
             return;
         }
 
-
+        // Set the clone.
         if (cloneTraveler == null)
         {
             cloneTraveler = Instantiate(originalTraveler);
@@ -55,24 +46,26 @@ public class PortalTraveler : MonoBehaviour
 
     public virtual void ExitPortal()
     {
+        ClearLastUsedPortal();
+
+        // If the traveler didn't have a mesh, don't continue.
         if (!originalTraveler)
         {
             return;
         }
 
-        ClearLastUsedPortal();
-
         cloneTraveler.SetActive(false);
     }
 
+    // Move the traveler from a portal to the destination portal.
     public void Travel(Vector3 toPosition, Quaternion newRotation, Portal traveledFrom, Portal traveledTo)
     {
         lastUsedPortal = traveledFrom;
 
-
         transform.position = toPosition;
         transform.rotation = newRotation;
 
+        // Tell that a travel happened.
         traveled?.Invoke(this);
     }
 
@@ -81,7 +74,7 @@ public class PortalTraveler : MonoBehaviour
         lastUsedPortal = null;
     }
 
-    /*
+    /* For slicing the player, not implemented.
     private Material[] GetMaterials(GameObject model)
     {
         List<Material> materials = new List<Material> { };

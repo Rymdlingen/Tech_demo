@@ -6,16 +6,18 @@ using System;
 
 public class Portal : MonoBehaviour
 {
-    // Properties.
-    public bool isActivated
-    {
-        get; private set;
-    }
-    public MeshRenderer screenMeshRenderer
-    {
-        get; private set;
-    }
+    #region Fields
 
+    // Properties.
+    public bool portalIsActivated
+    {
+        get; private set;
+    }
+    public Portal destination
+    {
+        get { return Destination; }
+        private set { }
+    }
     public PolygonCollider2D forcingFrame
     {
         get; private set;
@@ -23,7 +25,7 @@ public class Portal : MonoBehaviour
 
     // Private fields.
     [SerializeField] private Portal Destination;
-    public Portal destination { get { return Destination; } private set { } }
+    private MeshRenderer screenMeshRenderer;
     private Camera portalCamera;
     private RenderTexture screenRenderTexture;
     private Camera mainCamera;
@@ -32,6 +34,7 @@ public class Portal : MonoBehaviour
     private List<PortalTraveler> travelers = new List<PortalTraveler>();
     private Dictionary<PortalTraveler, Vector3> travelersStartPositions = new Dictionary<PortalTraveler, Vector3>();
 
+    #endregion
 
     void Start()
     {
@@ -42,10 +45,12 @@ public class Portal : MonoBehaviour
         mainCameraTraveler = mainCamera.GetComponent<PortalTraveler>();
         mainCamera.GetComponent<MainCameraController>().positionUpdated += OnMainCameraPositionUpdated;
         screenMeshRenderer.material.SetInt("displayMask", 1);
-        // Portals start with being on and visible.
-        isActivated = true;
-        screenMeshRenderer.enabled = isActivated;
 
+        // Portals start with being on and visible.
+        portalIsActivated = true;
+        screenMeshRenderer.enabled = portalIsActivated;
+
+        // Setting up the forcing frame at world origin.
         Transform forcingFrameTransform = transform.Find("Forcing Frame");
         forcingFrame = forcingFrameTransform.GetComponent<PolygonCollider2D>();
         forcingFrameTransform.SetParent(GameObject.Find("Forcing Frame Collection").transform);
@@ -56,15 +61,14 @@ public class Portal : MonoBehaviour
 
     private void Update()
     {
-
         // Press T to switch between portals being active or not.
         if (Input.GetKeyDown(KeyCode.T))
         {
-            isActivated = !isActivated;
-            screenMeshRenderer.enabled = isActivated;
+            portalIsActivated = !portalIsActivated;
+            screenMeshRenderer.enabled = portalIsActivated;
         }
 
-        // Move the traveler clone.
+        // Move the traveler clone for each traveler, if necessary.
         if (travelers.Count > 0)
         {
             foreach (PortalTraveler traveler in travelers)
@@ -100,7 +104,7 @@ public class Portal : MonoBehaviour
     void LateUpdate()
     {
         // If the portal is active render the view.
-        if (isActivated)
+        if (portalIsActivated)
         {
             Render();
         }
@@ -108,9 +112,9 @@ public class Portal : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (isActivated)
+        if (portalIsActivated)
         {
-            // Move travelers.
+            // Update the tracking of the travelers.
             if (travelers.Count > 0)
             {
                 for (int traveler = 0; traveler < travelers.Count; traveler++)
@@ -127,20 +131,23 @@ public class Portal : MonoBehaviour
         }
     }
 
+    // Follows an event coming from MainCameraController when main cameras position has been updated.
     private void OnMainCameraPositionUpdated()
     {
+        // Update the tracking of the main camera if it is a traveler.
         if (mainCameraInTravelers)
         {
             TrackTraveler(mainCameraTraveler);
         }
 
+        // Update the portal screen thickness.
         ProtectScreenFromClipping();
     }
 
-    public void Render()
+    // Update the screen texture and show it.
+    private void Render()
     {
-
-        // Don't move the camera if the player doesn't see the portal screen.
+        // Only do this for portals that are visible from the main camera.
         if (!VisibleFromCamera(destination.screenMeshRenderer, mainCamera))
         {
             return;
@@ -157,6 +164,7 @@ public class Portal : MonoBehaviour
         screenMeshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
     }
 
+    // Create a render texture for the portal screen.
     private void SetScreenRenderTexture()
     {
         if (screenRenderTexture == null || screenRenderTexture.width != Screen.width || screenRenderTexture.height != Screen.height)
@@ -174,6 +182,7 @@ public class Portal : MonoBehaviour
         }
     }
 
+    // Position the portal camera where the player camera is in relation to the destination portal.
     private void MovePortalCamera()
     {
         // The world position of the player camera if it would be next to the destination portal instead of the portal.
@@ -182,7 +191,7 @@ public class Portal : MonoBehaviour
     }
 
     // Copied from the code for Sebastians portal video. Checks if the portal is in the players view.
-    public static bool VisibleFromCamera(Renderer renderer, Camera camera)
+    public static bool VisibleFromCamera(Renderer renderer, Camera camera) // I don't understand why this is static and exactly when something should be static TODO
     {
         Plane[] frustumPlanes = GeometryUtility.CalculateFrustumPlanes(camera);
         return GeometryUtility.TestPlanesAABB(frustumPlanes, renderer.bounds);
@@ -190,8 +199,8 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        // When a traveler enters a portal collider add it to the list of travelers. 
         PortalTraveler traveler = other.GetComponent<PortalTraveler>();
-
         if (traveler)
         {
             AddTraveler(traveler);
@@ -200,8 +209,8 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerExit(Collider other)
     {
+        // When a traveler exits a portal collider remove it from the list of travelers. 
         PortalTraveler traveler = other.GetComponent<PortalTraveler>();
-
         if (traveler)
         {
             RemoveTraveler(traveler);
@@ -210,8 +219,8 @@ public class Portal : MonoBehaviour
 
     private void OnTriggerStay(Collider other)
     {
-        PortalTraveler traveler = other.GetComponent<PortalTraveler>();
         // Keep the clone visible as long as it is in the portal.
+        PortalTraveler traveler = other.GetComponent<PortalTraveler>();
         if (traveler && traveler.cloneTraveler && !traveler.cloneTraveler.activeInHierarchy)
         {
             traveler.cloneTraveler.SetActive(true);
@@ -248,11 +257,14 @@ public class Portal : MonoBehaviour
         }
     }
 
+    // Update the tracking of the traveler.
     private void TrackTraveler(PortalTraveler traveler)
     {
+        // Check if the traveler is on the same side of the portal as it started on.
         int travelerStartPortalSide = Math.Sign(Vector3.Dot(travelersStartPositions[traveler] - transform.position, transform.forward));
         int travelerCurrentPortalSide = Math.Sign(Vector3.Dot(traveler.transform.position - transform.position, transform.forward));
 
+        // If the traveler went to the other side of the portal, through the portal, make it travel!
         if (travelerStartPortalSide != travelerCurrentPortalSide)
         {
             RemoveTraveler(traveler);
@@ -264,7 +276,7 @@ public class Portal : MonoBehaviour
         }
     }
 
-    // TODO make the screen not clip.
+    // Change the screen thickness to make sure it doesn't clip with the camera.
     private void ProtectScreenFromClipping()
     {
         float halfHeight = mainCamera.nearClipPlane * Mathf.Tan(mainCamera.fieldOfView * 0.5f * Mathf.Deg2Rad);
@@ -278,6 +290,7 @@ public class Portal : MonoBehaviour
         screenT.localPosition = Vector3.forward * (screenThickness / transform.localScale.x) * (camFacingSameDirAsPortal ? 0.5f : -0.5f) + new Vector3(0, screenT.localPosition.y, 0);
     }
 
+    // Set the portal cameras near clip plane at the position of and parallel to the portal screen to hide objects that are inbetween the portal and the portal camera.
     private void SetNearClipPlane()
     {
         Transform clipPlane = screenMeshRenderer.transform;
@@ -297,27 +310,21 @@ public class Portal : MonoBehaviour
             portalCamera.projectionMatrix = mainCamera.projectionMatrix;
         }
     }
+
     private void OnDrawGizmos()
     {
-
         /*
-
-
         Matrix4x4 playerCameraToPortal = transform.localToWorldMatrix * destination.transform.worldToLocalMatrix * mainCamera.transform.localToWorldMatrix;
-
-
 
         // Convert the local coordinate values into world
         // coordinates for the matrix transformation.
         Gizmos.matrix = playerCameraToPortal;
         //Gizmos.DrawCube(player.transform.Find("Camera pivot").Find("Player Camera").position, Vector3.one);
 
-
         Gizmos.matrix = Matrix4x4.TRS(destination.portalCamera.transform.position, destination.portalCamera.transform.rotation, Vector3.one);
 
         Gizmos.DrawFrustum(Vector3.zero, destination.portalCamera.fieldOfView, destination.portalCamera.farClipPlane, destination.portalCamera.nearClipPlane, destination.portalCamera.aspect);
         */
-
 
         Gizmos.color = new Color(0.0f, 0.0f, 0.75f, 0.75f);
 
@@ -331,7 +338,6 @@ public class Portal : MonoBehaviour
             points = forcingFrame.points;
         }
 
-
         for (int i = 0; i < points.Length; i++)
         {
             Vector3 startPoint = transform.localToWorldMatrix.MultiplyPoint(points[i]);
@@ -339,10 +345,9 @@ public class Portal : MonoBehaviour
 
             Gizmos.DrawLine(startPoint, endPoint);
         }
-
-
     }
 
+    // Supposed to be used for only showing the part of an traveler that is on this side of the portal, I didn't finish implementing it but I will leave it here if I want it later.
     void UpdateSliceParams(PortalTraveler traveler)
     {
         // Calculate slice normal

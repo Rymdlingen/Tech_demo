@@ -5,6 +5,7 @@ using System;
 
 public class MainCameraController : MonoBehaviour
 {
+    // Debug player camera and main camera position to see if the main camera follows properly.
     public static void DebugSync(string message, bool always = false)
     {
         var mainCamera = Camera.main.gameObject.transform;
@@ -39,30 +40,29 @@ public class MainCameraController : MonoBehaviour
     public event Action targetTraveled;
 
     // Used for cameras position and rotation.
-    [SerializeField] private Vector3 unforcedPosition;
-    [SerializeField] private Vector3 forcedPositionDelta;
+    private Vector3 unforcedPosition;
     private Vector3 unforcedRotation;
-    [SerializeField] private Vector3 forcedPosition;
+    private Vector3 forcedPosition;
     [SerializeField] private float cameraBuffer;
     private bool inForcingState = false;
 
     // Used for rays.
-    [SerializeField] private Vector3 cameraToPlayerInCameraSpace;
-    [SerializeField] private Vector3 rayStart;
+    private Vector3 cameraToPlayerInCameraSpace;
+    private Vector3 rayStart;
 
     // Layers.
-    string[] layerNames = new string[] { "Big Environment Object", "Terrain", "Portal Frame" };
-    LayerMask environmentLayersMask;
-    LayerMask bigEnvirnomentObjectLayerMask;
-    LayerMask portalFrameLayerMask;
-    LayerMask terrainLayerMask;
+    private string[] layerNames = new string[] { "Big Environment Object", "Terrain", "Portal Frame" };
+    private LayerMask environmentLayersMask;
+    private LayerMask bigEnvirnomentObjectLayerMask;
+    private LayerMask portalFrameLayerMask;
+    private LayerMask terrainLayerMask;
 
-    List<GameObject> transparentObjects = new List<GameObject>();
+    private List<GameObject> transparentObjects = new List<GameObject>();
 
     // Start is called before the first frame update
     void Start()
     {
-        // Subscribing to events.
+        // Listening to events.
         target.trackingUpdated += OnTargetTrackingUpdated;
         GetComponent<PortalTraveler>().traveled += OnTraveled;
 
@@ -83,21 +83,13 @@ public class MainCameraController : MonoBehaviour
         terrainLayerMask = LayerMask.GetMask(layerNames[1]);
     }
 
-    private void Update()
-    {
-        if (Vector3.Distance(target.transform.position, transform.position) > cameraToPlayerInCameraSpace.magnitude + 1f)
-        {
-            targetTraveled?.Invoke();
-
-        }
-    }
-
+    // Called if the target position have been updated. Makes sure the camera follows the target, takes care of making obstructing objects transparent and moving the camera closer to the player in some cases.
     private void OnTargetTrackingUpdated()
     {
         RaycastHit hit;
         rayStart = unforcedPosition + transform.localToWorldMatrix.MultiplyVector(cameraToPlayerInCameraSpace);
 
-        // All rays.
+        // All ray directions. TODO needs way more rays, both wider and closer together.
         Vector3 rayDirection = unforcedPosition - rayStart;
         Vector3 rayToTheLeft = rayDirection - Camera.main.nearClipPlane * 3 * transform.right;
         Vector3 rayToTheRight = rayDirection + Camera.main.nearClipPlane * 3 * transform.right;
@@ -158,12 +150,13 @@ public class MainCameraController : MonoBehaviour
 
         #region Move camera
 
+        // Tried to use these instead of the long if condition below, but then it always gives the hit of the middle raycast (because it is last), and I couldn't figure out how I should do it nicer. 
         bool leftRaycastHit = Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
         bool rightRaycastHit = Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
         bool middleRaycastHit = Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), environmentLayersMask);
 
         // The hit is always set to the middle ray with means it is null if the camera is trying to change position if the other two rays are hitting. TODO
-
+        // This is set to terrain layer mask instead of environment layer mask, so it only reacts to the terrain and not to, for example, the portal frame. This is wrong.
         if (Physics.Raycast(rayStart, rayDirection, out hit, Vector3.Distance(rayStart, unforcedPosition), terrainLayerMask) || Physics.Raycast(rayStart, rayToTheRight, out hit, Vector3.Distance(rayStart, unforcedPosition), terrainLayerMask) || Physics.Raycast(rayStart, rayToTheLeft, out hit, Vector3.Distance(rayStart, unforcedPosition), terrainLayerMask))
         {
             // Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
@@ -171,35 +164,39 @@ public class MainCameraController : MonoBehaviour
             // If the hit is a portal, make sure tha camera moves inside the portal frame.
             if (LayerMask.GetMask(LayerMask.LayerToName(hit.collider.gameObject.layer)) == portalFrameLayerMask)
             {
-                Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+                Debug.Log("Hit the portal frame");
+                // Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
+                // Get the forced position and use it.
                 forcedPosition = hit.point + cameraBuffer * transform.forward;
-                forcedPositionDelta = hit.point - unforcedPosition;
-                //transform.position = forcedPosition;
-                transform.position = Vector3.Lerp(transform.position, forcedPosition, .05f);
+                transform.position = Vector3.Lerp(transform.position, forcedPosition, 1f * Time.deltaTime);
+
                 // Update the unforced position.
                 Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
                 unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
 
                 inForcingState = true;
-
             }
             // If the hit is environment, do normal movement.
             else if (LayerMask.GetMask(LayerMask.LayerToName(hit.collider.gameObject.layer)) == bigEnvirnomentObjectLayerMask)
             {
                 inForcingState = false;
-                if (transform.position != unforcedPosition) transform.position = unforcedPosition;
+                if (transform.position != unforcedPosition)
+                {
+                    // transform.position = Vector3.Lerp(transform.position, unforcedPosition, .05f);
+                    transform.position = Vector3.Lerp(transform.position, unforcedPosition, 5f * Time.deltaTime);
+                }
                 Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
                 unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
                 transform.position = unforcedPosition;
+
             }
             // If a hit is terrain or building, I don't know what to do really. MAKE A DECISION TODO
             else
             {
                 // Debug.Log("Racast hit: " + LayerMask.LayerToName(hit.transform.gameObject.layer) + ", " + hit.transform.gameObject.name);
                 forcedPosition = hit.point + cameraBuffer * transform.forward;
-                forcedPositionDelta = hit.point - unforcedPosition;
-                //transform.position = forcedPosition;
-                transform.position = Vector3.Lerp(transform.position, forcedPosition, .05f);
+                transform.position = Vector3.Lerp(transform.position, forcedPosition, 5f * Time.deltaTime);
+
                 // Update the unforced position.
                 Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
                 unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
@@ -209,21 +206,26 @@ public class MainCameraController : MonoBehaviour
         }
         else
         {
-            inForcingState = false;
-            if (transform.position != unforcedPosition)
-            {
-                transform.position = unforcedPosition;
-                // transform.position = Vector3.Lerp(transform.position, unforcedPosition, .05f);
-            }
-            // transform.Translate(target.travelerPositionDelta);
-
             Matrix4x4 unforcedWorldMatrix = Matrix4x4.TRS(unforcedPosition, Quaternion.Euler(unforcedRotation), Vector3.one);
             unforcedPosition += unforcedWorldMatrix.MultiplyVector(target.travelerPositionDelta);
+
+            // This doesn't do anything since i'm setting the position below. TODO
+            if (transform.position != unforcedPosition)
+            {
+                // transform.position = unforcedPosition;
+                // transform.position = Vector3.Lerp(transform.position, unforcedPosition, .05f);
+                transform.position = Vector3.Lerp(transform.position, unforcedPosition, 5f * Time.deltaTime);
+            }
+
             transform.position = unforcedPosition;
+
+            inForcingState = false;
+
         }
 
         #endregion
 
+        // Update rotation, couldn't get the rotation to work as I wanted in the forced state.
         if (false && inForcingState)
         {
             transform.LookAt(target.transform);
@@ -235,9 +237,11 @@ public class MainCameraController : MonoBehaviour
             unforcedRotation = transform.rotation.eulerAngles;
         }
 
+        // Tell that the position has been updated.
         positionUpdated?.Invoke();
     }
 
+    // James helped me and wrote most of this method :)
     private List<GameObject> GetObstructingGameObjects(params Ray[] rays)
     {
         var gameObjects = new List<GameObject>();
@@ -258,8 +262,7 @@ public class MainCameraController : MonoBehaviour
 
     private void OnTraveled(PortalTraveler traveler)
     {
-
-
+        // Update forced and unforced positions and rotations after this object traveled.
         if (inForcingState)
         {
             forcedPosition = transform.position;
@@ -275,6 +278,7 @@ public class MainCameraController : MonoBehaviour
             unforcedRotation = transform.rotation.eulerAngles;
         }
 
+        // Tell that the position has been updated.
         positionUpdated?.Invoke();
     }
 
