@@ -25,7 +25,7 @@ public class CameraController : MonoBehaviour
     private Transform playerCameraTransform;
 
     // Forcing the camera.
-    [SerializeField] float haveTraveledThreshold;
+    private float haveTraveledThreshold;
     private Vector3 hitPoint;
     private Vector3 desiredHitPoint;
     private Plane xyPlane;
@@ -44,6 +44,9 @@ public class CameraController : MonoBehaviour
         // Find camera focus point.
         playerCameraTransform = GameObject.Find("Player Camera").transform;
         focusPointYOffset = new Vector3(0, playerCameraTransform.localPosition.y, 0);
+
+        haveTraveledThreshold = (playerCameraTransform.position - transform.position).magnitude + 1f;
+        Debug.Log(haveTraveledThreshold);
     }
 
     // Update is called once per frame
@@ -73,6 +76,8 @@ public class CameraController : MonoBehaviour
             player.transform.localRotation = Quaternion.Euler(0, yRotation, 0);
             transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         }
+
+        Debug.Log((Camera.main.transform.position - transform.position).magnitude);
 
         // If the distance between the camera and the player is bigger than threshold, restrict the camera movement.
         if ((Camera.main.transform.position - transform.position).magnitude > haveTraveledThreshold)

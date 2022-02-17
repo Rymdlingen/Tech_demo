@@ -13,10 +13,11 @@ public class Portal : MonoBehaviour
     {
         get; private set;
     }
+    [field: SerializeField]
     public Portal destination
     {
-        get { return Destination; }
-        private set { }
+        get;
+        private set;
     }
     public PolygonCollider2D forcingFrame
     {
@@ -24,7 +25,6 @@ public class Portal : MonoBehaviour
     }
 
     // Private fields.
-    [SerializeField] private Portal Destination;
     private MeshRenderer screenMeshRenderer;
     private Camera portalCamera;
     private RenderTexture screenRenderTexture;
@@ -347,6 +347,7 @@ public class Portal : MonoBehaviour
         }
     }
 
+    /*
     // Supposed to be used for only showing the part of an traveler that is on this side of the portal, I didn't finish implementing it but I will leave it here if I want it later.
     void UpdateSliceParams(PortalTraveler traveler)
     {
@@ -359,7 +360,6 @@ public class Portal : MonoBehaviour
         Vector3 slicePos = transform.position;
         Vector3 cloneSlicePos = destination.transform.position;
 
-        /*
         // Adjust slice offset so that when player standing on other side of portal to the object, the slice doesn't clip through
         float sliceOffsetDst = 0;
         float cloneSliceOffsetDst = 0;
@@ -368,16 +368,15 @@ public class Portal : MonoBehaviour
         bool playerSameSideAsTraveller = SameSideOfPortal(playerCam.transform.position, traveler.transform.position);
         if (side > 0)
 
-        if (!playerSameSideAsTraveller)
-        {
-            sliceOffsetDst = -screenThickness;
-        }
+            if (!playerSameSideAsTraveller)
+            {
+                sliceOffsetDst = -screenThickness;
+            }
         bool playerSameSideAsCloneAppearing = side != destination.SideOfPortal(playerCamera.transform.position);
         if (!playerSameSideAsCloneAppearing)
         {
             cloneSliceOffsetDst = -screenThickness;
         }
-        */
 
         // Apply parameters
         for (int i = 0; i < traveler.playerMaterials.Length; i++)
@@ -391,6 +390,6 @@ public class Portal : MonoBehaviour
             // traveler.cloneMaterials[i].SetFloat("sliceOffsetDst", cloneSliceOffsetDst);
 
         }
-
     }
+    */
 }

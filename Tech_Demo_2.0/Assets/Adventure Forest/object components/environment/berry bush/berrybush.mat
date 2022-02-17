@@ -70,9 +70,10 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _Transparency: 1
     - _UVSec: 0
     - _Wind: 1
-    - _WindPower: 0.0004
+    - _WindPower: 0.000004
     - _ZWrite: 1
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}

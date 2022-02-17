@@ -8,15 +8,16 @@ public class PortalTraveler : MonoBehaviour
     public GameObject originalTraveler { get; private set; }
     public GameObject cloneTraveler { get; private set; }
 
-    public Material[] playerMaterials { get; private set; }
-    public Material[] cloneMaterials { get; private set; }
+    // Used for slicing the traveler, not implemented properly.
+    // public Material[] playerMaterials { get; private set; }
+    // public Material[] cloneMaterials { get; private set; }
 
     public Portal lastUsedPortal { get; private set; }
 
     public event Action<PortalTraveler> traveled;
 
     // Start is called before the first frame update
-    protected virtual void Start() // Why is this protected? TODO
+    protected virtual void Start()
     {
         // Used for cloning the traveler if they have a mesh.
         originalTraveler = gameObject.transform.GetComponentInChildren<MeshRenderer>()?.gameObject;
@@ -34,7 +35,6 @@ public class PortalTraveler : MonoBehaviour
         if (cloneTraveler == null)
         {
             cloneTraveler = Instantiate(originalTraveler);
-            // cloneCharacter.transform.parent = playerCharacter.transform.parent;
             cloneTraveler.transform.localScale = originalTraveler.transform.localScale;
             // cloneMaterials = GetMaterials(cloneCharacter);
         }
@@ -60,13 +60,16 @@ public class PortalTraveler : MonoBehaviour
     // Move the traveler from a portal to the destination portal.
     public void Travel(Vector3 toPosition, Quaternion newRotation, Portal traveledFrom, Portal traveledTo)
     {
-        lastUsedPortal = traveledFrom;
+        if (traveledFrom.portalIsActivated)
+        {
+            lastUsedPortal = traveledFrom;
 
-        transform.position = toPosition;
-        transform.rotation = newRotation;
+            transform.position = toPosition;
+            transform.rotation = newRotation;
 
-        // Tell that a travel happened.
-        traveled?.Invoke(this);
+            // Tell that a travel happened.
+            traveled?.Invoke(this);
+        }
     }
 
     public void ClearLastUsedPortal()
@@ -74,7 +77,7 @@ public class PortalTraveler : MonoBehaviour
         lastUsedPortal = null;
     }
 
-    /* For slicing the player, not implemented.
+    /* For slicing the traveler, not implemented.
     private Material[] GetMaterials(GameObject model)
     {
         List<Material> materials = new List<Material> { };

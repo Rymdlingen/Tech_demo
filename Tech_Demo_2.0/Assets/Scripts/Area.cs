@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Area : MonoBehaviour
 {
-    // TODO make into propertys?? Need to be a monobehaviour? to attach to game object??
+    // TODO make into properties?? Need to be a monobehaviour? to attach to game object??
     public string Name;
     public bool IsExplored;
 }
